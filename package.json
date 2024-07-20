@@ -1,0 +1,30 @@
+{
+  "name": "@masatomakino/state-atoms",
+  "version": "0.1.0",
+  "description": "StateAtoms is a lightweight state management library for TypeScript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasatoMakino/StateAtoms.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MasatoMakino/StateAtoms/issues"
+  },
+  "homepage": "https://github.com/MasatoMakino/StateAtoms#readme",
+  "devDependencies": {
+    "@vitest/browser": "^2.0.3",
+    "eventemitter3": "^5.0.1",
+    "typescript": "^5.5.3"
+  },
+  "peerDependencies": {
+    "eventemitter3": "^5.0.1"
+  },
+  "dependencies": {
+    "fast-equals": "^5.0.1"
+  }
+}
