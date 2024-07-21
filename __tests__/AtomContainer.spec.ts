@@ -4,8 +4,8 @@ import { Atom, AtomContainer } from "../src/index.js";
 export class SimpleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2);
-  constructor() {
-    super();
+  constructor(options?: { isSkipSerialization?: boolean }) {
+    super(options);
     this.addMembers();
   }
 }
