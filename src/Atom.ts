@@ -17,10 +17,16 @@ export type AtomEvents<T> = {
  */
 export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   protected _value: T;
+  /**
+   * AtomContainer.toJson, toObjectなどの関数によってシリアライズの対象となるか否か
+   * @default false
+   */
+  protected _isSkipSerialization: boolean;
 
-  constructor(initialValue: T) {
+  constructor(initialValue: T, options?: { isSkipSerialization?: boolean }) {
     super();
     this._value = initialValue;
+    this._isSkipSerialization = options?.isSkipSerialization ?? false;
   }
 
   get value() {
