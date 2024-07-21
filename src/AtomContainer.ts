@@ -1,23 +1,32 @@
 import EventEmitter from "eventemitter3";
 import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
 
+/**
+ * 複数のAtomおよびAtomContainerを保持し、その値が変更された際にイベントを発行するクラス
+ */
 export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
-  constructor() {
-    super();
-
+  /**
+   * このクラスに保持されているAtomおよびAtomContainerの値が変更された際にイベントを発行する
+   * このイベントはAtomContainerのルートまで伝播する
+   */
+  protected addMembers() {
     for (const value of Object.values(this)) {
       if (value instanceof Atom || value instanceof AtomContainer) {
-        value.on("beforeChange", (arg: AtomEventArgs<any>) => {
-          this.emit("beforeChange", arg);
-        });
-        value.on("change", (arg: AtomEventArgs<any>) => {
-          this.emit("change", arg);
-        });
-        value.on("addHistory", () => {
-          this.emit("addHistory");
-        });
+        this.add(value);
       }
     }
+  }
+
+  private add(value: Atom<unknown> | AtomContainer) {
+    value.on("beforeChange", (arg: AtomEventArgs<any>) => {
+      this.emit("beforeChange", arg);
+    });
+    value.on("change", (arg: AtomEventArgs<any>) => {
+      this.emit("change", arg);
+    });
+    value.on("addHistory", () => {
+      this.emit("addHistory");
+    });
   }
 
   /**
