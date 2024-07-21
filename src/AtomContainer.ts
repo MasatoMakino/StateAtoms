@@ -6,6 +6,17 @@ import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
  */
 export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
   /**
+   * AtomContainer.toJson, toObjectなどの関数によってシリアライズの対象となるか否か
+   * @default false
+   */
+  readonly isSkipSerialization: boolean;
+
+  constructor(options?: { isSkipSerialization?: boolean }) {
+    super();
+    this.isSkipSerialization = options?.isSkipSerialization ?? false;
+  }
+
+  /**
    * このクラスに保持されているAtomおよびAtomContainerの値が変更された際にイベントを発行する
    * このイベントはAtomContainerのルートまで伝播する
    */
@@ -36,9 +47,9 @@ export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
   toObject(): T {
     const obj = {};
     for (const [key, value] of Object.entries(this)) {
-      if (value instanceof AtomContainer) {
+      if (value instanceof AtomContainer && !value.isSkipSerialization) {
         obj[key] = value.toObject();
-      } else if (value instanceof Atom) {
+      } else if (value instanceof Atom && !value.isSkipSerialization) {
         obj[key] = value.value;
       }
     }
