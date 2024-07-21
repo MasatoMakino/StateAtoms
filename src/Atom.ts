@@ -41,16 +41,17 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   }
 
   protected updateValue(oldValue: T, newValue: T) {
-    this.emit("beforeChange", {
+    const args = {
       from: this,
       value: newValue,
       valueFrom: oldValue,
+    };
+    this.emit("beforeChange", {
+      ...args,
     });
     this._value = newValue;
     this.emit("change", {
-      from: this,
-      value: newValue,
-      valueFrom: oldValue,
+      ...args,
     });
   }
 }
