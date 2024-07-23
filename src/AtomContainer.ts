@@ -3,8 +3,14 @@ import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
 
 /**
  * 複数のAtomおよびAtomContainerを保持し、その値が変更された際にイベントを発行するクラス
+ * 
+ * @template DataType このクラスが保持する値の型
+ * @template EventsType このクラスが発行するイベントの型
  */
-export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
+export class AtomContainer<
+  DataType = any,
+  EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
+> extends EventEmitter<AtomEvents<unknown> | EventTypes> {
   /**
    * AtomContainer.toJson, toObjectなどの関数によってシリアライズの対象となるか否か
    * @default false
@@ -44,7 +50,7 @@ export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
    * このクラスに保持されているAtomおよびAtomContainerの値をオブジェクトにコピーする。
    * @returns T
    */
-  toObject(): T {
+  toObject(): DataType {
     const obj = {};
     for (const [key, value] of Object.entries(this)) {
       if (value instanceof AtomContainer && !value.isSkipSerialization) {
@@ -53,7 +59,7 @@ export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
         obj[key] = value.value;
       }
     }
-    return obj as T;
+    return obj as DataType;
   }
   /**
    * このクラスに保持されているAtomおよびAtomContainerの値をJSON文字列に変換する。
@@ -68,7 +74,7 @@ export class AtomContainer<T = any> extends EventEmitter<AtomEvents<unknown>> {
    * ObjectからAtomおよびAtomContainerの値を復元する。
    * @param json
    */
-  fromObject(obj: T): void {
+  fromObject(obj: DataType): void {
     for (const [key, value] of Object.entries(obj as {})) {
       if (this[key] instanceof AtomContainer) {
         this[key].fromObject(value);

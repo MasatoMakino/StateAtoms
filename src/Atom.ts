@@ -1,12 +1,12 @@
 import EventEmitter from "eventemitter3";
 
-export type AtomEventArgs<T> = {
+export interface AtomEventArgs<T> {
   from: Atom<T>;
   value: T;
   valueFrom: T;
 };
 
-export type AtomEvents<T> = {
+export interface AtomEvents<T> {
   beforeChange: (arg: AtomEventArgs<T>) => void;
   change: (arg: AtomEventArgs<T>) => void;
   addHistory: () => void;
