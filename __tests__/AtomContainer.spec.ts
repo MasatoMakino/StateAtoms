@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { Atom, AtomContainer } from "../src/index.js";
+import { Atom, AtomContainer, AtomContainerOptions } from "../src/index.js";
 
 export class SimpleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2);
-  constructor(options?: { isSkipSerialization?: boolean }) {
+  constructor(options?: AtomContainerOptions) {
     super(options);
-    this.addMembers();
+    this.init();
   }
 }
 

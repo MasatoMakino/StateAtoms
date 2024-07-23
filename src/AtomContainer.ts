@@ -1,14 +1,19 @@
 import EventEmitter from "eventemitter3";
 import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
 
+export type AtomContainerOptions = {
+  isSkipSerialization?: boolean;
+  useHistory?: boolean;
+};
+
 /**
  * 複数のAtomおよびAtomContainerを保持し、その値が変更された際にイベントを発行するクラス
- * 
+ *
  * @template DataType このクラスが保持する値の型
  * @template EventTypes このクラスが発行するイベントの型
  *   EventTypesを指定することで、このクラスが発行するイベントを拡張できる。
  *   しかし、拡張するとリスナーの引数がanyと解釈されるため推奨しない。
- *   代わりに、カスタムイベントを発行するEventEmitterをメンバー変数として持つことを推奨する。 
+ *   代わりに、カスタムイベントを発行するEventEmitterをメンバー変数として持つことを推奨する。
  */
 export class AtomContainer<
   DataType = any,
@@ -20,11 +25,29 @@ export class AtomContainer<
    */
   readonly isSkipSerialization: boolean;
 
-  constructor(options?: { isSkipSerialization?: boolean }) {
+  /**
+   * undo, redoを行うための履歴
+   */
+  private _history: DataType[] = [];
+  /**
+   * 履歴配列の現在のインデックス
+   */
+  private _historyIndex = -1;
+  /**
+   * 履歴を使用するか否か
+   */
+  private _useHistory: boolean;
+
+  constructor(options?: AtomContainerOptions) {
     super();
     this.isSkipSerialization = options?.isSkipSerialization ?? false;
+    this._useHistory = options?.useHistory ?? false;
   }
 
+  protected init() {
+    this.addMembers();
+    this.initHistory();
+  }
   /**
    * このクラスに保持されているAtomおよびAtomContainerの値が変更された際にイベントを発行する
    * このイベントはAtomContainerのルートまで伝播する
@@ -47,6 +70,45 @@ export class AtomContainer<
     value.on("addHistory", () => {
       this.emit("addHistory");
     });
+  }
+
+  protected initHistory() {
+    if (!this._useHistory) {
+      return;
+    }
+
+    this.on("addHistory", () => {
+      this.addHistory();
+    });
+    this.addHistory();
+  }
+
+  public addHistory() {
+    if (!this._useHistory) {
+      return;
+    }
+
+    this._historyIndex++;
+    this._history.splice(this._historyIndex);
+    this._history.push(this.toObject());
+  }
+
+  public undo() {
+    if (!this._useHistory || this._historyIndex <= 0) {
+      return;
+    }
+
+    this._historyIndex--;
+    this.fromObject(this._history[this._historyIndex]);
+  }
+
+  public redo() {
+    if (!this._useHistory || this._historyIndex >= this._history.length - 1) {
+      return;
+    }
+
+    this._historyIndex++;
+    this.fromObject(this._history[this._historyIndex]);
   }
 
   /**
