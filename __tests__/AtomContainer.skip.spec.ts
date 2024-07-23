@@ -10,7 +10,7 @@ export class SkipAtomContainer extends AtomContainer {
   });
   constructor() {
     super();
-    this.addMembers();
+    this.init();
   }
 }
 
