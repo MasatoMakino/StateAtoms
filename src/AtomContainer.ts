@@ -5,12 +5,15 @@ import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
  * 複数のAtomおよびAtomContainerを保持し、その値が変更された際にイベントを発行するクラス
  * 
  * @template DataType このクラスが保持する値の型
- * @template EventsType このクラスが発行するイベントの型
+ * @template EventTypes このクラスが発行するイベントの型
+ *   EventTypesを指定することで、このクラスが発行するイベントを拡張できる。
+ *   しかし、拡張するとリスナーの引数がanyと解釈されるため推奨しない。
+ *   代わりに、カスタムイベントを発行するEventEmitterをメンバー変数として持つことを推奨する。 
  */
 export class AtomContainer<
   DataType = any,
   EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
-> extends EventEmitter<AtomEvents<unknown> | EventTypes> {
+> extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
    * AtomContainer.toJson, toObjectなどの関数によってシリアライズの対象となるか否か
    * @default false
