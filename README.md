@@ -11,7 +11,7 @@ StateAtomsは、状態をAtomと呼ぶ小さな単位に分割し、それらを
 StateAtomsは、npmを使用してインストールできます。以下のコマンドを実行してください。
 
 ```
-npm install https://github.com/MasatoMakino/StateAtoms.git
+npm install git+https://github.com/MasatoMakino/StateAtoms.git
 ```
 
 ## 使い方
