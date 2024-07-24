@@ -160,4 +160,18 @@ export class AtomContainer<
     const jsonObj = JSON.parse(json);
     this.fromObject(jsonObj);
   }
+
+  /**
+   * データを読み込む
+   * historyを使用する場合、履歴をクリアする
+   * @param obj
+   */
+  load(obj: DataType) {
+    if (this._useHistory) {
+      this._history = [];
+      this._historyIndex = -1;
+    }
+    this.fromObject(obj);
+    this.addHistory();
+  }
 }
