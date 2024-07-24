@@ -22,7 +22,7 @@
     "type": "git",
     "url": "git+https://github.com/MasatoMakino/StateAtoms.git"
   },
-  "author": "",
+  "author": "MasatoMakino <makino.masato.g@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MasatoMakino/StateAtoms/issues"
