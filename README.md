@@ -2,6 +2,9 @@
 
 StateAtomsは、状態管理を容易にするためのライブラリです。このREADMEでは、StateAtomsの概要と使い方について説明します。
 
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![test](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml/badge.svg)](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml)
+
 ## 概要
 
 StateAtomsは、状態をAtomと呼ぶ小さな単位に分割し、それらを組み合わせて状態を表現します。これにより、状態の変更や監視を簡単に行うことができます。
