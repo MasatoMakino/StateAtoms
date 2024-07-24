@@ -2,7 +2,17 @@
   "name": "@masatomakino/state-atoms",
   "version": "0.1.0",
   "description": "StateAtoms is a lightweight state management library for TypeScript.",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./esm/index.d.ts",
+      "default": "./esm/index.js"
+    }
+  },
+  "types": "./esm/index.d.ts",
+  "files": [
+    "esm"
+  ],
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage",
