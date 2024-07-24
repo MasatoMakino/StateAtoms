@@ -1,5 +1,7 @@
 import EventEmitter from "eventemitter3";
-import { Atom, AtomEventArgs, AtomEvents } from "./Atom";
+import { Atom } from "./Atom.js";
+import { AtomEventArgs } from "./AtomEventArgs.js";
+import { AtomEvents } from "./AtomEvents.js";
 
 export type AtomContainerOptions = {
   isSkipSerialization?: boolean;

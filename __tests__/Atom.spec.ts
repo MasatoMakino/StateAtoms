@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { Atom } from "../src/Atom";
+import { Atom } from "../src/index.js";
 
 describe("Atom", () => {
   it("initalize", () => {

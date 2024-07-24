@@ -1,16 +1,5 @@
 import EventEmitter from "eventemitter3";
-
-export interface AtomEventArgs<T> {
-  from: Atom<T>;
-  value: T;
-  valueFrom: T;
-};
-
-export interface AtomEvents<T> {
-  beforeChange: (arg: AtomEventArgs<T>) => void;
-  change: (arg: AtomEventArgs<T>) => void;
-  addHistory: () => void;
-};
+import { AtomEvents } from "./AtomEvents.js";
 
 /**
  * プリミティブな値を保持し、その値が変更された際にイベントを発行するクラス

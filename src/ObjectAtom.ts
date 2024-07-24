@@ -1,4 +1,4 @@
-import { Atom } from "./Atom";
+import { Atom } from "./Atom.js";
 import { deepEqual } from "fast-equals";
 
 /**

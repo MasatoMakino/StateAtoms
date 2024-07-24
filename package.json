@@ -4,7 +4,8 @@
   "description": "StateAtoms is a lightweight state management library for TypeScript.",
   "main": "index.js",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -17,14 +18,13 @@
   },
   "homepage": "https://github.com/MasatoMakino/StateAtoms#readme",
   "devDependencies": {
-    "@vitest/browser": "^2.0.3",
+    "@vitest/coverage-istanbul": "^2.0.4",
     "eventemitter3": "^5.0.1",
+    "fast-equals": "^5.0.1",
     "typescript": "^5.5.3"
   },
   "peerDependencies": {
-    "eventemitter3": "^5.0.1"
-  },
-  "dependencies": {
+    "eventemitter3": "^5.0.1",
     "fast-equals": "^5.0.1"
   }
 }
