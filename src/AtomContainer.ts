@@ -118,7 +118,7 @@ export class AtomContainer<
    * @returns T
    */
   toObject(): DataType {
-    const obj = {};
+    const obj = {} as any;
     for (const [key, value] of Object.entries(this)) {
       if (value instanceof AtomContainer && !value.isSkipSerialization) {
         obj[key] = value.toObject();
@@ -143,11 +143,11 @@ export class AtomContainer<
    */
   fromObject(obj: DataType): void {
     for (const [key, value] of Object.entries(obj as {})) {
-      if (this[key] instanceof AtomContainer) {
-        this[key].fromObject(value);
-      }
-      if (this[key] instanceof Atom) {
-        this[key].value = value;
+      const member = (this as any)[key];
+      if (member instanceof AtomContainer) {
+        member.fromObject(value);
+      } else if (member instanceof Atom) {
+        member.value = value;
       }
     }
   }
