@@ -4,6 +4,8 @@ StateAtoms is a library designed to simplify state management. This README provi
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![test](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml/badge.svg)](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/d7d3ee33d8f2a9cb1509/test_coverage)](https://codeclimate.com/github/MasatoMakino/StateAtoms/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/d7d3ee33d8f2a9cb1509/maintainability)](https://codeclimate.com/github/MasatoMakino/StateAtoms/maintainability)
 
 ## Overview
 
