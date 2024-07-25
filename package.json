@@ -1,6 +1,6 @@
 {
   "name": "@masatomakino/state-atoms",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "StateAtoms is a lightweight state management library for TypeScript.",
   "type": "module",
   "exports": {
