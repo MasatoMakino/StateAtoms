@@ -143,7 +143,7 @@ export class AtomContainer<
    */
   fromObject(obj: DataType): void {
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-      const member = (this as Record<string, unknown>)[key];
+      const member = (this as Record<typeof key, unknown>)[key];
       if (member instanceof AtomContainer) {
         member.fromObject(value);
       } else if (member instanceof Atom) {
