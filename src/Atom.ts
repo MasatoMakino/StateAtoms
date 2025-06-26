@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import { AtomEvents } from "./AtomEvents.js";
+import type { AtomEvents } from "./AtomEvents.js";
 
 /**
  * プリミティブな値を保持し、その値が変更された際にイベントを発行するクラス

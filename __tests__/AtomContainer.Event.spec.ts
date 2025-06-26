@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { Atom, AtomContainer, AtomEvents } from "../src/index.js";
+import { describe, expect, it, vi } from "vitest";
+import { Atom, AtomContainer, type AtomEvents } from "../src/index.js";
 
 export interface ExtendAtomEvents extends AtomEvents<unknown> {
   addTest: (arg: number) => void;
