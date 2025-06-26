@@ -1,7 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { Atom } from "./Atom.js";
-import { AtomEventArgs } from "./AtomEventArgs.js";
-import { AtomEvents } from "./AtomEvents.js";
+import type { AtomEventArgs } from "./AtomEventArgs.js";
+import type { AtomEvents } from "./AtomEvents.js";
 
 export type AtomContainerOptions = {
   isSkipSerialization?: boolean;
@@ -18,7 +18,7 @@ export type AtomContainerOptions = {
  *   代わりに、カスタムイベントを発行するEventEmitterをメンバー変数として持つことを推奨する。
  */
 export class AtomContainer<
-  DataType = any,
+  DataType = unknown,
   EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
 > extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
@@ -63,10 +63,10 @@ export class AtomContainer<
   }
 
   private add(value: Atom<unknown> | AtomContainer) {
-    value.on("beforeChange", (arg: AtomEventArgs<any>) => {
+    value.on("beforeChange", (arg: AtomEventArgs<unknown>) => {
       this.emit("beforeChange", arg);
     });
-    value.on("change", (arg: AtomEventArgs<any>) => {
+    value.on("change", (arg: AtomEventArgs<unknown>) => {
       this.emit("change", arg);
     });
     value.on("addHistory", () => {
@@ -118,7 +118,7 @@ export class AtomContainer<
    * @returns T
    */
   toObject(): DataType {
-    const obj = {} as any;
+    const obj = {} as Record<string, unknown>;
     for (const [key, value] of Object.entries(this)) {
       if (value instanceof AtomContainer && !value.isSkipSerialization) {
         obj[key] = value.toObject();
@@ -142,8 +142,8 @@ export class AtomContainer<
    * @param json
    */
   fromObject(obj: DataType): void {
-    for (const [key, value] of Object.entries(obj as {})) {
-      const member = (this as any)[key];
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      const member = (this as Record<string, unknown>)[key];
       if (member instanceof AtomContainer) {
         member.fromObject(value);
       } else if (member instanceof Atom) {
