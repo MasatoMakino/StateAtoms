@@ -1,5 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
-import { Atom, AtomContainer, AtomContainerOptions } from "../src/index.js";
+import { describe, expect, it, vi } from "vitest";
+import {
+  Atom,
+  AtomContainer,
+  type AtomContainerOptions,
+} from "../src/index.js";
 
 export class SimpleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);

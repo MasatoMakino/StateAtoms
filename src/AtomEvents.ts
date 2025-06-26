@@ -1,4 +1,4 @@
-import { AtomEventArgs } from "./AtomEventArgs.js";
+import type { AtomEventArgs } from "./AtomEventArgs.js";
 
 export interface AtomEvents<T> {
   beforeChange: (arg: AtomEventArgs<T>) => void;

@@ -1,5 +1,5 @@
-import { Atom } from "./Atom.js";
 import { deepEqual } from "fast-equals";
+import { Atom } from "./Atom.js";
 
 /**
  * オブジェクトを保持し、その値が変更された際にイベントを発行するクラス
