@@ -83,7 +83,7 @@ container.atom1.value = 1;
 
 Events like change propagate to the AtomContainer. In the example above, when the value of atom1 changes, the AtomContainer receives the notification.
 
-An AtomContainer can output the values of its atoms as an object or a JSON string using the toObject or toJSON methods. You can also restore the values of the atoms using the output object.
+An AtomContainer can output the values of its atoms as an object or a JSON string using the toObject or toJson methods. You can also restore the values of the atoms using the output object.
 
 ```javascript
 const dump = container.toObject();
