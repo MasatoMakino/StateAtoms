@@ -5,20 +5,20 @@ import type { AtomEvents } from "./AtomEvents.js";
 
 /**
  * Configuration options for AtomContainer instances.
- * 
+ *
  * @since 0.1.0
  */
 export type AtomContainerOptions = {
   /**
    * Whether to exclude this container from serialization operations.
-   * 
+   *
    * @default false
    */
   isSkipSerialization?: boolean;
-  
+
   /**
    * Whether to enable undo/redo functionality with automatic history tracking.
-   * 
+   *
    * @default false
    */
   useHistory?: boolean;
@@ -26,7 +26,7 @@ export type AtomContainerOptions = {
 
 /**
  * A class that holds multiple Atoms and AtomContainers and emits events when their values change.
- * 
+ *
  * The AtomContainer provides hierarchical state management with automatic event propagation,
  * serialization capabilities, and optional undo/redo functionality. It automatically
  * discovers and manages child atoms and containers.
@@ -35,25 +35,25 @@ export type AtomContainerOptions = {
  * @template EventTypes - The type of events this container can emit
  *   You can extend the event types, but this may cause listener arguments to be interpreted as 'any'.
  *   Instead, consider having an EventEmitter member variable for custom events.
- * 
+ *
  * @example
  * ```typescript
  * class UserContainer extends AtomContainer<{name: string, age: number}> {
  *   name = new Atom("John");
  *   age = new Atom(30);
- *   
+ *
  *   constructor() {
  *     super();
  *     this.init(); // Required after adding member atoms
  *   }
  * }
- * 
+ *
  * const user = new UserContainer();
  * user.on("change", (args) => {
  *   console.log("User data changed:", args);
  * });
  * ```
- * 
+ *
  * @example
  * ```typescript
  * // Container with history support
@@ -61,7 +61,7 @@ export type AtomContainerOptions = {
  * container.undo(); // Undo last change
  * container.redo(); // Redo last undone change
  * ```
- * 
+ *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
  * @see {@link AtomContainerOptions} for configuration options
@@ -73,35 +73,35 @@ export class AtomContainer<
   /**
    * Determines whether this container should be excluded from serialization
    * operations like toJson() and toObject().
-   * 
+   *
    * @default false
    */
   readonly isSkipSerialization: boolean;
 
   /**
    * History array for undo/redo operations.
-   * 
+   *
    * @private
    */
   private _history: DataType[] = [];
-  
+
   /**
    * Current index in the history array.
-   * 
+   *
    * @private
    */
   private _historyIndex = -1;
-  
+
   /**
    * Whether history tracking is enabled.
-   * 
+   *
    * @private
    */
   private _useHistory: boolean;
 
   /**
    * Creates a new AtomContainer instance.
-   * 
+   *
    * @param options - Configuration options
    */
   constructor(options?: AtomContainerOptions) {
@@ -113,18 +113,18 @@ export class AtomContainer<
   /**
    * Initializes the container by adding member atoms/containers and setting up history.
    * This method must be called in the constructor after all member atoms are added.
-   * 
+   *
    * @protected
    */
   protected init() {
     this.addMembers();
     this.initHistory();
   }
-  
+
   /**
    * Automatically discovers and adds event listeners to all Atom and AtomContainer members.
    * Events from child atoms/containers are propagated up to the root container.
-   * 
+   *
    * @protected
    */
   protected addMembers() {
@@ -137,7 +137,7 @@ export class AtomContainer<
 
   /**
    * Adds event listeners to propagate events from child atoms/containers.
-   * 
+   *
    * @param value - The atom or container to add event listeners to
    * @private
    */
@@ -156,7 +156,7 @@ export class AtomContainer<
   /**
    * Initializes history tracking if enabled.
    * Sets up automatic history recording on state changes.
-   * 
+   *
    * @protected
    */
   protected initHistory() {
@@ -173,7 +173,7 @@ export class AtomContainer<
   /**
    * Adds the current state to the history stack.
    * This method is called automatically when history tracking is enabled.
-   * 
+   *
    * @example
    * ```typescript
    * container.addHistory(); // Manually add current state to history
@@ -192,7 +192,7 @@ export class AtomContainer<
   /**
    * Undoes the last change by restoring the previous state from history.
    * Only works if history tracking is enabled.
-   * 
+   *
    * @example
    * ```typescript
    * container.undo(); // Restore previous state
@@ -210,7 +210,7 @@ export class AtomContainer<
   /**
    * Redoes the last undone change by restoring the next state from history.
    * Only works if history tracking is enabled.
-   * 
+   *
    * @example
    * ```typescript
    * container.redo(); // Restore next state
@@ -228,9 +228,9 @@ export class AtomContainer<
   /**
    * Copies the values of all Atoms and AtomContainers held in this class to a plain object.
    * Atoms and containers marked with isSkipSerialization are excluded.
-   * 
+   *
    * @returns A plain object containing the serialized state
-   * 
+   *
    * @example
    * ```typescript
    * const state = container.toObject();
@@ -248,12 +248,12 @@ export class AtomContainer<
     }
     return obj as DataType;
   }
-  
+
   /**
    * Converts the values of all Atoms and AtomContainers held in this class to a JSON string.
-   * 
+   *
    * @returns A JSON string representation of the serialized state
-   * 
+   *
    * @example
    * ```typescript
    * const json = container.toJson();
@@ -268,9 +268,9 @@ export class AtomContainer<
   /**
    * Restores the values of Atoms and AtomContainers from a plain object.
    * Only existing atoms and containers are updated; new properties are ignored.
-   * 
+   *
    * @param obj - The object containing the state to restore
-   * 
+   *
    * @example
    * ```typescript
    * container.fromObject({ name: "Jane", age: 25 });
@@ -289,11 +289,11 @@ export class AtomContainer<
 
   /**
    * Restores the values of Atoms and AtomContainers from a JSON string.
-   * 
+   *
    * @param json - The JSON string to parse and restore from
-   * 
+   *
    * @throws {SyntaxError} If the JSON string is invalid
-   * 
+   *
    * @example
    * ```typescript
    * container.fromJson('{"name":"Jane","age":25}');
@@ -307,9 +307,9 @@ export class AtomContainer<
   /**
    * Loads data into the container.
    * If history tracking is enabled, clears the history and starts fresh.
-   * 
+   *
    * @param obj - The data to load
-   * 
+   *
    * @example
    * ```typescript
    * container.load({ name: "Jane", age: 25 });
