@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { Atom } from "../src/index.js";
 
-describe("Atom", () => {
-  it("initalize", () => {
+describe("Atom - Core reactive primitive value management", () => {
+  it("should initialize with correct value and be properly defined", () => {
     const atom = new Atom(1);
     expect(atom).toBeDefined();
     expect(atom.value).toBe(1);
   });
 
-  it("should allow changing the value of atom and emit an event upon change", () => {
+  it("should emit beforeChange and change events with correct arguments when value changes", () => {
     const atom = new Atom(1);
     const spyBeforeChange = vi.fn();
     const spyChange = vi.fn();
@@ -29,7 +29,7 @@ describe("Atom", () => {
     });
   });
 
-  it("should emit an addHistory event from Atom", () => {
+  it("should propagate addHistory events for integration with AtomContainer history management", () => {
     const atom = new Atom(1);
     const spyAddHistory = vi.fn();
     atom.on("addHistory", spyAddHistory);
