@@ -3,56 +3,129 @@ import { Atom } from "./Atom.js";
 import type { AtomEventArgs } from "./AtomEventArgs.js";
 import type { AtomEvents } from "./AtomEvents.js";
 
+/**
+ * Configuration options for AtomContainer instances.
+ *
+ * @since 0.1.0
+ */
 export type AtomContainerOptions = {
+  /**
+   * Whether to exclude this container from serialization operations.
+   *
+   * @default false
+   */
   isSkipSerialization?: boolean;
+
+  /**
+   * Whether to enable undo/redo functionality with automatic history tracking.
+   *
+   * @default false
+   */
   useHistory?: boolean;
 };
 
 /**
- * 複数のAtomおよびAtomContainerを保持し、その値が変更された際にイベントを発行するクラス
+ * A class that holds multiple Atoms and AtomContainers and emits events when their values change.
  *
- * @template DataType このクラスが保持する値の型
- * @template EventTypes このクラスが発行するイベントの型
- *   EventTypesを指定することで、このクラスが発行するイベントを拡張できる。
- *   しかし、拡張するとリスナーの引数がanyと解釈されるため推奨しない。
- *   代わりに、カスタムイベントを発行するEventEmitterをメンバー変数として持つことを推奨する。
+ * The AtomContainer provides hierarchical state management with automatic event propagation,
+ * serialization capabilities, and optional undo/redo functionality. It automatically
+ * discovers and manages child atoms and containers.
+ *
+ * @template DataType - The type of data this container holds when serialized
+ * @template EventTypes - The type of events this container can emit
+ *   You can extend the event types, but this may cause listener arguments to be interpreted as 'any'.
+ *   Instead, consider having an EventEmitter member variable for custom events.
+ *
+ * @example
+ * ```typescript
+ * class UserContainer extends AtomContainer<{name: string, age: number}> {
+ *   name = new Atom("John");
+ *   age = new Atom(30);
+ *
+ *   constructor() {
+ *     super();
+ *     this.init(); // Required after adding member atoms
+ *   }
+ * }
+ *
+ * const user = new UserContainer();
+ * user.on("change", (args) => {
+ *   console.log("User data changed:", args);
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Container with history support
+ * const container = new AtomContainer({ useHistory: true });
+ * container.undo(); // Undo last change
+ * container.redo(); // Redo last undone change
+ * ```
+ *
+ * @since 0.1.0
+ * @see {@link Atom} for individual state values
+ * @see {@link AtomContainerOptions} for configuration options
  */
 export class AtomContainer<
   DataType = unknown,
   EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
 > extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
-   * AtomContainer.toJson, toObjectなどの関数によってシリアライズの対象となるか否か
+   * Determines whether this container should be excluded from serialization
+   * operations like toJson() and toObject().
+   *
    * @default false
    */
   readonly isSkipSerialization: boolean;
 
   /**
-   * undo, redoを行うための履歴
+   * History array for undo/redo operations.
+   *
+   * @private
    */
   private _history: DataType[] = [];
+
   /**
-   * 履歴配列の現在のインデックス
+   * Current index in the history array.
+   *
+   * @private
    */
   private _historyIndex = -1;
+
   /**
-   * 履歴を使用するか否か
+   * Whether history tracking is enabled.
+   *
+   * @private
    */
   private _useHistory: boolean;
 
+  /**
+   * Creates a new AtomContainer instance.
+   *
+   * @param options - Configuration options
+   */
   constructor(options?: AtomContainerOptions) {
     super();
     this.isSkipSerialization = options?.isSkipSerialization ?? false;
     this._useHistory = options?.useHistory ?? false;
   }
 
+  /**
+   * Initializes the container by adding member atoms/containers and setting up history.
+   * This method must be called in the constructor after all member atoms are added.
+   *
+   * @protected
+   */
   protected init() {
     this.addMembers();
     this.initHistory();
   }
+
   /**
-   * このクラスに保持されているAtomおよびAtomContainerの値が変更された際にイベントを発行する
-   * このイベントはAtomContainerのルートまで伝播する
+   * Automatically discovers and adds event listeners to all Atom and AtomContainer members.
+   * Events from child atoms/containers are propagated up to the root container.
+   *
+   * @protected
    */
   protected addMembers() {
     for (const value of Object.values(this)) {
@@ -62,6 +135,12 @@ export class AtomContainer<
     }
   }
 
+  /**
+   * Adds event listeners to propagate events from child atoms/containers.
+   *
+   * @param value - The atom or container to add event listeners to
+   * @private
+   */
   private add(value: Atom<unknown> | AtomContainer) {
     value.on("beforeChange", (arg: AtomEventArgs<unknown>) => {
       this.emit("beforeChange", arg);
@@ -74,6 +153,12 @@ export class AtomContainer<
     });
   }
 
+  /**
+   * Initializes history tracking if enabled.
+   * Sets up automatic history recording on state changes.
+   *
+   * @protected
+   */
   protected initHistory() {
     if (!this._useHistory) {
       return;
@@ -85,6 +170,15 @@ export class AtomContainer<
     this.addHistory();
   }
 
+  /**
+   * Adds the current state to the history stack.
+   * This method is called automatically when history tracking is enabled.
+   *
+   * @example
+   * ```typescript
+   * container.addHistory(); // Manually add current state to history
+   * ```
+   */
   public addHistory() {
     if (!this._useHistory) {
       return;
@@ -95,6 +189,15 @@ export class AtomContainer<
     this._history.push(this.toObject());
   }
 
+  /**
+   * Undoes the last change by restoring the previous state from history.
+   * Only works if history tracking is enabled.
+   *
+   * @example
+   * ```typescript
+   * container.undo(); // Restore previous state
+   * ```
+   */
   public undo() {
     if (!this._useHistory || this._historyIndex <= 0) {
       return;
@@ -104,6 +207,15 @@ export class AtomContainer<
     this.fromObject(this._history[this._historyIndex]);
   }
 
+  /**
+   * Redoes the last undone change by restoring the next state from history.
+   * Only works if history tracking is enabled.
+   *
+   * @example
+   * ```typescript
+   * container.redo(); // Restore next state
+   * ```
+   */
   public redo() {
     if (!this._useHistory || this._historyIndex >= this._history.length - 1) {
       return;
@@ -114,8 +226,16 @@ export class AtomContainer<
   }
 
   /**
-   * このクラスに保持されているAtomおよびAtomContainerの値をオブジェクトにコピーする。
-   * @returns T
+   * Copies the values of all Atoms and AtomContainers held in this class to a plain object.
+   * Atoms and containers marked with isSkipSerialization are excluded.
+   *
+   * @returns A plain object containing the serialized state
+   *
+   * @example
+   * ```typescript
+   * const state = container.toObject();
+   * console.log(state); // { name: "John", age: 30 }
+   * ```
    */
   toObject(): DataType {
     const obj = {} as Record<string, unknown>;
@@ -128,9 +248,17 @@ export class AtomContainer<
     }
     return obj as DataType;
   }
+
   /**
-   * このクラスに保持されているAtomおよびAtomContainerの値をJSON文字列に変換する。
-   * @returns string
+   * Converts the values of all Atoms and AtomContainers held in this class to a JSON string.
+   *
+   * @returns A JSON string representation of the serialized state
+   *
+   * @example
+   * ```typescript
+   * const json = container.toJson();
+   * console.log(json); // '{"name":"John","age":30}'
+   * ```
    */
   toJson(): string {
     const obj = this.toObject();
@@ -138,8 +266,15 @@ export class AtomContainer<
   }
 
   /**
-   * ObjectからAtomおよびAtomContainerの値を復元する。
-   * @param json
+   * Restores the values of Atoms and AtomContainers from a plain object.
+   * Only existing atoms and containers are updated; new properties are ignored.
+   *
+   * @param obj - The object containing the state to restore
+   *
+   * @example
+   * ```typescript
+   * container.fromObject({ name: "Jane", age: 25 });
+   * ```
    */
   fromObject(obj: DataType): void {
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
@@ -153,8 +288,16 @@ export class AtomContainer<
   }
 
   /**
-   * json文字列からAtomおよびAtomContainerの値を復元する。
-   * @param json
+   * Restores the values of Atoms and AtomContainers from a JSON string.
+   *
+   * @param json - The JSON string to parse and restore from
+   *
+   * @throws {SyntaxError} If the JSON string is invalid
+   *
+   * @example
+   * ```typescript
+   * container.fromJson('{"name":"Jane","age":25}');
+   * ```
    */
   fromJson(json: string): void {
     const jsonObj = JSON.parse(json);
@@ -162,9 +305,16 @@ export class AtomContainer<
   }
 
   /**
-   * データを読み込む
-   * historyを使用する場合、履歴をクリアする
-   * @param obj
+   * Loads data into the container.
+   * If history tracking is enabled, clears the history and starts fresh.
+   *
+   * @param obj - The data to load
+   *
+   * @example
+   * ```typescript
+   * container.load({ name: "Jane", age: 25 });
+   * // History is cleared and new state becomes the first history entry
+   * ```
    */
   load(obj: DataType) {
     if (this._useHistory) {

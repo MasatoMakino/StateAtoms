@@ -130,3 +130,6 @@ dist
 .pnp.*
 
 esm
+
+# Temporary JSDoc examples directory
+temp-jsdoc-examples/
