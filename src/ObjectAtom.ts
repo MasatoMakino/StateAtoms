@@ -46,6 +46,15 @@ import { Atom } from "./Atom.js";
  */
 export class ObjectAtom<T> extends Atom<T> {
   /**
+   * Gets the current value of this atom.
+   *
+   * @returns The current value
+   */
+  get value() {
+    return this._value;
+  }
+
+  /**
    * Sets a new value for this atom using deep equality comparison.
    * If the new value is deeply equal to the current value, no events are emitted.
    *

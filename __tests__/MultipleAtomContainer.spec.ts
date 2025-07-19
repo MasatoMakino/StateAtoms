@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
 import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
+/**
+ * Test helper demonstrating nested container hierarchies.
+ * Tests multi-level event propagation and serialization of complex state structures.
+ */
 export class MultipleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(3);
   readonly atom2 = new Atom(4);
@@ -12,13 +16,13 @@ export class MultipleAtomContainer extends AtomContainer {
   }
 }
 
-describe("MultipleAtomContainer", () => {
-  it("initalize", () => {
+describe("MultipleAtomContainer - Nested container hierarchies and event propagation", () => {
+  it("should initialize nested container structure properly", () => {
     const atomContainer = new MultipleAtomContainer();
     expect(atomContainer).toBeTruthy();
   });
 
-  it("should emit an event upon change of atom in MultipleAtomContainer", () => {
+  it("should bubble events from deeply nested atoms through container hierarchy", () => {
     const atomContainer = new MultipleAtomContainer();
     const spyBeforeChange = vi.fn();
     const spyChange = vi.fn();
@@ -39,7 +43,7 @@ describe("MultipleAtomContainer", () => {
     });
   });
 
-  it("should emit an addHistory event from MultipleAtomContainer", () => {
+  it("should propagate addHistory events from nested containers for unified history management", () => {
     const atomContainer = new MultipleAtomContainer();
     const spyAddHistory = vi.fn();
     atomContainer.on("addHistory", spyAddHistory);
@@ -48,7 +52,7 @@ describe("MultipleAtomContainer", () => {
     expect(spyAddHistory).toHaveBeenCalled();
   });
 
-  it("should correctly serialize to an object", () => {
+  it("should serialize nested container structures to hierarchical object with toObject()", () => {
     const atomContainer = new MultipleAtomContainer();
     expect(atomContainer.toObject()).toEqual({
       atom1: 3,
@@ -57,14 +61,14 @@ describe("MultipleAtomContainer", () => {
     });
   });
 
-  it("should correctly serialize to a JSON string", () => {
+  it("should serialize nested container structures to hierarchical JSON with toJson()", () => {
     const atomContainer = new MultipleAtomContainer();
     expect(atomContainer.toJson()).toBe(
       '{"atom1":3,"atom2":4,"atomContainer":{"atom1":1,"atom2":2}}',
     );
   });
 
-  it("should correctly deserialize from an object", () => {
+  it("should restore nested container state from hierarchical object with fromObject()", () => {
     const atomContainer = new MultipleAtomContainer();
     atomContainer.fromObject({
       atom1: 21,
@@ -77,7 +81,7 @@ describe("MultipleAtomContainer", () => {
     expect(atomContainer.atomContainer.atom2.value).toBe(51);
   });
 
-  it("should correctly deserialize from a JSON string", () => {
+  it("should restore nested container state from hierarchical JSON with fromJson()", () => {
     const atomContainer = new MultipleAtomContainer();
     atomContainer.fromJson(
       `{"atom1":21,"atom2":31,"atomContainer":{"atom1":41,"atom2":51}}`,

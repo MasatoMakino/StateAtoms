@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
-describe("AtomContainer.history", () => {
-  it("should undo and redo", () => {
+describe("AtomContainer.history - Undo/redo state management and history clearing", () => {
+  it("should support undo/redo operations when useHistory option is enabled", () => {
     const container = new SimpleAtomContainer({
       useHistory: true,
     });
@@ -29,7 +29,7 @@ describe("AtomContainer.history", () => {
     expect(container.atom2.value).toBe(2);
   });
 
-  it("should not undo and redo without option", () => {
+  it("should ignore undo/redo operations when useHistory option is disabled", () => {
     const container = new SimpleAtomContainer();
     expect(container.atom1.value).toBe(1);
     expect(container.atom2.value).toBe(2);
@@ -45,7 +45,7 @@ describe("AtomContainer.history", () => {
     expect(container.atom2.value).toBe(2);
   });
 
-  it("should clear history with load()", () => {
+  it("should clear history stack when loading new state with load() method", () => {
     const container = new SimpleAtomContainer({ useHistory: true });
 
     container.atom1.value = 2;
