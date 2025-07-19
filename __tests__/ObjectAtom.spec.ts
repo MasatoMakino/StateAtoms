@@ -91,7 +91,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
   });
 
   it("should handle null and undefined values correctly", () => {
-    const atom = new ObjectAtom<{ value: string | null }>({ value: null });
+    const atom = new ObjectAtom<{ value: string | null | undefined }>({
+      value: null,
+    });
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
@@ -100,12 +102,15 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     expect(spyChange).not.toHaveBeenCalled();
 
     // Changing to undefined should emit
-    atom.value = { value: undefined as any };
+    atom.value = { value: undefined };
     expect(spyChange).toHaveBeenCalled();
   });
 
   it("should handle empty objects and arrays correctly", () => {
-    const atom = new ObjectAtom({ empty: {}, list: [] });
+    const atom = new ObjectAtom<{
+      empty: Record<string, unknown>;
+      list: number[];
+    }>({ empty: {}, list: [] });
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
