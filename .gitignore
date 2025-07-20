@@ -134,3 +134,6 @@ esm
 # Temporary JSDoc examples directory
 temp-jsdoc-examples/
 **/settings.local.json
+
+# Local development notes and memos (not tracked in git)
+local-notes/

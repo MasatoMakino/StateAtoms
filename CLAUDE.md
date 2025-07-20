@@ -68,3 +68,10 @@ Uses Biome for linting and formatting (2-space indentation, double quotes, 80 ch
 - Event propagation flows upward through container hierarchy
 - Serialization skips atoms/containers with `isSkipSerialization: true`
 - History feature requires `useHistory: true` in container options
+
+## Project Structure
+
+### Local Development Files
+- **`local-notes/`**: Directory for local development memos and notes (excluded from git)
+  - Contains implementation considerations, debugging notes, and temporary documentation
+  - Files in this directory are not tracked in version control
