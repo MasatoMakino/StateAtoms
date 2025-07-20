@@ -101,6 +101,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       }).toThrow(SyntaxError);
 
       // Incompatible data types should be accepted (type coercion)
+      // Testing runtime behavior with incompatible types
       container.fromObject({
         atom1: "string instead of number",
         nonExistentProperty: "ignored",
@@ -174,6 +175,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       const originalAtom2Value = container.atom2.value;
 
       // Only provide data for atom1
+      // Testing partial data loading with missing properties
       container.load({ atom1: 999 } as unknown as {
         atom1: number;
         atom2: number;
