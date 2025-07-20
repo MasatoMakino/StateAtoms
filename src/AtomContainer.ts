@@ -294,6 +294,9 @@ export class AtomContainer<
    *
    * @throws {SyntaxError} If the JSON string is invalid
    *
+   * @warning Invalid JSON strings will throw a SyntaxError. Consider wrapping
+   * this method in a try-catch block when handling user input or external data.
+   *
    * @example
    * ```typescript
    * container.fromJson('{"name":"Jane","age":25}');

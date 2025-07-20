@@ -40,6 +40,13 @@ import { Atom } from "./Atom.js";
  * };
  * ```
  *
+ * @warning Error objects with identical messages may still trigger change events
+ * due to different stack traces. Error instances are compared using deep equality,
+ * and stack traces make them structurally different even when logically equivalent.
+ *
+ * @warning Circular references in objects will cause a stack overflow error.
+ * The fast-equals library cannot handle circular object structures safely.
+ *
  * @since 0.1.0
  * @see {@link Atom} for primitive value atoms with reference equality
  * @see {@link AtomContainer} for managing multiple atoms
