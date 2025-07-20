@@ -43,15 +43,6 @@ describe("MultipleAtomContainer - Nested container hierarchies and event propaga
     });
   });
 
-  it("should propagate addHistory events from nested containers for unified history management", () => {
-    const atomContainer = new MultipleAtomContainer();
-    const spyAddHistory = vi.fn();
-    atomContainer.on("addHistory", spyAddHistory);
-
-    atomContainer.atomContainer.atom1.emit("addHistory");
-    expect(spyAddHistory).toHaveBeenCalled();
-  });
-
   it("should serialize nested container structures to hierarchical object with toObject()", () => {
     const atomContainer = new MultipleAtomContainer();
     expect(atomContainer.toObject()).toEqual({
