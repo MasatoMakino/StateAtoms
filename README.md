@@ -175,15 +175,15 @@ console.log(container.count.value); // 2
 ```typescript
 // Skip serialization for different use cases
 const sessionToken = new Atom("secret-token", {
-  isSkipSerialization: true // Sensitive data
+  skipSerialization: true // Sensitive data
 });
 
 const currentModalState = new Atom("dialog-open", {
-  isSkipSerialization: true // Temporary UI state that resets on navigation
+  skipSerialization: true // Temporary UI state that resets on navigation
 });
 
 const loadingState = new Atom(false, {
-  isSkipSerialization: true // Runtime state not needed for backend sync
+  skipSerialization: true // Runtime state not needed for backend sync
 });
 
 // Container with mixed serialization needs
@@ -194,11 +194,11 @@ class AppContainerWithRuntimeState extends AtomContainer<{
   userSettings = new ObjectAtom({ theme: "light", language: "en" });
   
   // Temporary UI state (excluded from serialization/backend sync)
-  isMenuOpen = new Atom(false, { isSkipSerialization: true });
-  currentPage = new Atom("home", { isSkipSerialization: true });
+  isMenuOpen = new Atom(false, { skipSerialization: true });
+  currentPage = new Atom("home", { skipSerialization: true });
   
   // Sensitive data (excluded from serialization)
-  authToken = new Atom("", { isSkipSerialization: true });
+  authToken = new Atom("", { skipSerialization: true });
 
   constructor() {
     super({ useHistory: true });
@@ -215,7 +215,7 @@ Holds primitive values with change notifications.
 
 - `constructor(initialValue: T, options?)`: Create a new atom
 - `value: T`: Get/set the current value
-- `isSkipSerialization: boolean`: Whether to exclude from serialization
+- `skipSerialization: boolean`: Whether to exclude from serialization
 
 **Events:**
 - `change`: Emitted when value changes

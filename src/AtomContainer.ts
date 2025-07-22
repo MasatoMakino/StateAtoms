@@ -4,14 +4,38 @@ import type { AtomEventArgs } from "./AtomEventArgs.js";
 import type { AtomEvents } from "./AtomEvents.js";
 
 /**
- * Configuration options for AtomContainer instances.
+ * Modern configuration options for AtomContainer instances.
+ * This is the preferred API that uses consistent naming conventions.
  *
  * @since 0.1.0
  */
-export type AtomContainerOptions = {
+export type AtomContainerOptionsModern = {
   /**
    * Whether to exclude this container from serialization operations.
    *
+   * @default false
+   */
+  skipSerialization?: boolean;
+
+  /**
+   * Whether to enable undo/redo functionality with automatic history tracking.
+   *
+   * @default false
+   */
+  useHistory?: boolean;
+};
+
+/**
+ * Legacy configuration options for AtomContainer instances.
+ *
+ * @deprecated Use AtomContainerOptionsModern with skipSerialization instead
+ * @since 0.1.0
+ */
+export type AtomContainerOptionsLegacy = {
+  /**
+   * Whether to exclude this container from serialization operations.
+   *
+   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
    * @default false
    */
   isSkipSerialization?: boolean;
@@ -23,6 +47,26 @@ export type AtomContainerOptions = {
    */
   useHistory?: boolean;
 };
+
+/**
+ * Configuration options for AtomContainer instances.
+ *
+ * Currently supports both modern and legacy APIs for backward compatibility.
+ *
+ * @since 0.1.0
+ *
+ * @remarks
+ * **Migration Plan:**
+ * - In a future major version, legacy support (AtomContainerOptionsLegacy) will be removed
+ * - AtomContainerOptionsModern will be renamed to AtomContainerOptions
+ * - This union type structure will be simplified to contain only the modern API
+ *
+ * **Recommended Usage:**
+ * Use AtomContainerOptionsModern directly for new code to avoid future migration needs.
+ */
+export type AtomContainerOptions =
+  | AtomContainerOptionsModern
+  | AtomContainerOptionsLegacy;
 
 /**
  * A class that holds multiple Atoms and AtomContainers and emits events when their values change.
@@ -76,7 +120,7 @@ export class AtomContainer<
    *
    * @default false
    */
-  readonly isSkipSerialization: boolean;
+  readonly skipSerialization: boolean;
 
   /**
    * History array for undo/redo operations.
@@ -104,10 +148,34 @@ export class AtomContainer<
    *
    * @param options - Configuration options
    */
+  constructor(options?: AtomContainerOptionsModern);
+
+  /**
+   * Creates a new AtomContainer instance with legacy options.
+   *
+   * @deprecated Use the constructor with AtomContainerOptionsModern instead
+   * @param options - Legacy configuration options
+   */
+  constructor(options?: AtomContainerOptionsLegacy);
+
   constructor(options?: AtomContainerOptions) {
     super();
-    this.isSkipSerialization = options?.isSkipSerialization ?? false;
+    this.skipSerialization =
+      (options as AtomContainerOptionsModern)?.skipSerialization ??
+      (options as AtomContainerOptionsLegacy)?.isSkipSerialization ??
+      false;
     this._useHistory = options?.useHistory ?? false;
+  }
+
+  /**
+   * Determines whether this container should be excluded from serialization
+   * operations like toJson() and toObject().
+   *
+   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
+   * @default false
+   */
+  get isSkipSerialization(): boolean {
+    return this.skipSerialization;
   }
 
   /**
@@ -227,7 +295,7 @@ export class AtomContainer<
 
   /**
    * Copies the values of all Atoms and AtomContainers held in this class to a plain object.
-   * Atoms and containers marked with isSkipSerialization are excluded.
+   * Atoms and containers marked with skipSerialization are excluded.
    *
    * @returns A plain object containing the serialized state
    *
@@ -240,9 +308,9 @@ export class AtomContainer<
   toObject(): DataType {
     const obj = {} as Record<string, unknown>;
     for (const [key, value] of Object.entries(this)) {
-      if (value instanceof AtomContainer && !value.isSkipSerialization) {
+      if (value instanceof AtomContainer && !value.skipSerialization) {
         obj[key] = value.toObject();
-      } else if (value instanceof Atom && !value.isSkipSerialization) {
+      } else if (value instanceof Atom && !value.skipSerialization) {
         obj[key] = value.value;
       }
     }
