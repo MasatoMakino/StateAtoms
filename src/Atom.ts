@@ -44,9 +44,15 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   /**
    * Creates a new Atom instance.
    *
+   * Atom uses strict equality (`===`) for change detection, making it ideal for
+   * primitive values. For complex objects requiring deep equality comparison,
+   * consider using ObjectAtom instead.
+   *
    * @param initialValue - The initial value for this atom
    * @param options - Configuration options
    * @param options.isSkipSerialization - Whether to exclude this atom from serialization
+   *
+   * @see {@link ObjectAtom} for deep equality comparison of objects
    */
   constructor(initialValue: T, options?: { isSkipSerialization?: boolean }) {
     super();
@@ -67,6 +73,10 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    * Sets a new value for this atom. If the new value is different from the current value,
    * it will emit "beforeChange" and "change" events.
    *
+   * Uses strict equality (`===`) for change detection, which is optimal for primitive values
+   * like numbers, strings, and booleans. For objects, dates, or complex types requiring
+   * deep equality comparison, consider using ObjectAtom instead.
+   *
    * @param newValue - The new value to set
    *
    * @example
@@ -75,6 +85,16 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    * atom.value = 2; // Emits events
    * atom.value = 2; // No events (same value)
    * ```
+   *
+   * @example
+   * ```typescript
+   * // For objects, use ObjectAtom for proper deep equality
+   * const dateAtom = new Atom(new Date("2024-01-01"));
+   * dateAtom.value = new Date("2024-01-01"); // Emits event (different references)
+   * // Consider: new ObjectAtom(new Date("2024-01-01")) for deep equality
+   * ```
+   *
+   * @see {@link ObjectAtom} for deep equality comparison of complex objects
    */
   set value(newValue: T) {
     if (this._value === newValue) {
