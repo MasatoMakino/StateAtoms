@@ -143,7 +143,7 @@ app.fromJson('{"count":15}');
 ### History and Undo/Redo
 
 ```typescript
-class HistoryContainer extends AtomContainer {
+class HistoryContainer extends AtomContainer<{ count: number }> {
   count = new Atom(0);
 
   constructor() {
@@ -187,7 +187,9 @@ const loadingState = new Atom(false, {
 });
 
 // Container with mixed serialization needs
-class AppContainerWithRuntimeState extends AtomContainer {
+class AppContainerWithRuntimeState extends AtomContainer<{
+  userSettings: { theme: string; language: string };
+}> {
   // Persistent application data
   userSettings = new ObjectAtom({ theme: "light", language: "en" });
   
