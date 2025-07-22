@@ -187,7 +187,7 @@ const loadingState = new Atom(false, {
 });
 
 // Container with mixed serialization needs
-class AppContainer extends AtomContainer {
+class AppContainerWithRuntimeState extends AtomContainer {
   // Persistent application data
   userSettings = new ObjectAtom({ theme: "light", language: "en" });
   
