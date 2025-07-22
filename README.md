@@ -215,7 +215,7 @@ Holds primitive values with change notifications.
 
 - `constructor(initialValue: T, options?)`: Create a new atom
 - `value: T`: Get/set the current value
-- `skipSerialization: boolean`: Whether to exclude from serialization
+- `skipSerialization: boolean`: Whether to exclude from serialization (default: `false`)
 
 **Events:**
 - `change`: Emitted when value changes
