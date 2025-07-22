@@ -2,6 +2,55 @@ import EventEmitter from "eventemitter3";
 import type { AtomEvents } from "./AtomEvents.js";
 
 /**
+ * Modern configuration options for Atom instances.
+ * This is the preferred API that uses consistent naming conventions.
+ *
+ * @since 0.1.0
+ */
+export type AtomOptionsModern = {
+  /**
+   * Whether to exclude this atom from serialization operations.
+   *
+   * @default false
+   */
+  skipSerialization?: boolean;
+};
+
+/**
+ * Legacy configuration options for Atom instances.
+ *
+ * @deprecated Use AtomOptionsModern with skipSerialization instead
+ * @since 0.1.0
+ */
+export type AtomOptionsLegacy = {
+  /**
+   * Whether to exclude this atom from serialization operations.
+   *
+   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
+   * @default false
+   */
+  isSkipSerialization?: boolean;
+};
+
+/**
+ * Configuration options for Atom instances.
+ *
+ * Currently supports both modern and legacy APIs for backward compatibility.
+ *
+ * @since 0.1.0
+ *
+ * @remarks
+ * **Migration Plan:**
+ * - In a future major version, legacy support (AtomOptionsLegacy) will be removed
+ * - AtomOptionsModern will be renamed to AtomOptions
+ * - This union type structure will be simplified to contain only the modern API
+ *
+ * **Recommended Usage:**
+ * Use AtomOptionsModern directly for new code to avoid future migration needs.
+ */
+export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
+
+/**
  * A class that holds primitive values and emits events when those values change.
  *
  * The Atom class provides reactive state management by automatically emitting
@@ -39,7 +88,7 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    *
    * @default false
    */
-  readonly isSkipSerialization: boolean;
+  readonly skipSerialization: boolean;
 
   /**
    * Creates a new Atom instance.
@@ -50,14 +99,38 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    *
    * @param initialValue - The initial value for this atom
    * @param options - Configuration options
-   * @param options.isSkipSerialization - Whether to exclude this atom from serialization
    *
    * @see {@link ObjectAtom} for deep equality comparison of objects
    */
-  constructor(initialValue: T, options?: { isSkipSerialization?: boolean }) {
+  constructor(initialValue: T, options?: AtomOptionsModern);
+
+  /**
+   * Creates a new Atom instance with legacy options.
+   *
+   * @deprecated Use the constructor with AtomOptionsModern instead
+   * @param initialValue - The initial value for this atom
+   * @param options - Legacy configuration options
+   */
+  constructor(initialValue: T, options?: AtomOptionsLegacy);
+
+  constructor(initialValue: T, options?: AtomOptions) {
     super();
     this._value = initialValue;
-    this.isSkipSerialization = options?.isSkipSerialization ?? false;
+    this.skipSerialization =
+      (options as AtomOptionsModern)?.skipSerialization ??
+      (options as AtomOptionsLegacy)?.isSkipSerialization ??
+      false;
+  }
+
+  /**
+   * Determines whether this atom should be excluded from serialization
+   * operations like AtomContainer.toJson() and toObject().
+   *
+   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
+   * @default false
+   */
+  get isSkipSerialization(): boolean {
+    return this.skipSerialization;
   }
 
   /**

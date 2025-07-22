@@ -80,14 +80,14 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
   // Enhanced tests for error handling and complex scenarios
   describe("Constructor options and initialization", () => {
-    it("should set isSkipSerialization to false by default", () => {
+    it("should set skipSerialization to false by default", () => {
       const container = new AtomContainer();
-      expect(container.isSkipSerialization).toBe(false);
+      expect(container.skipSerialization).toBe(false);
     });
 
-    it("should set isSkipSerialization when provided in options", () => {
-      const container = new AtomContainer({ isSkipSerialization: true });
-      expect(container.isSkipSerialization).toBe(true);
+    it("should set skipSerialization when provided in options", () => {
+      const container = new AtomContainer({ skipSerialization: true });
+      expect(container.skipSerialization).toBe(true);
     });
   });
 
@@ -133,8 +133,8 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
     it("should handle container with only skipped atoms", () => {
       class SkippedContainer extends AtomContainer {
-        atom1 = new Atom(1, { isSkipSerialization: true });
-        atom2 = new Atom(2, { isSkipSerialization: true });
+        atom1 = new Atom(1, { skipSerialization: true });
+        atom2 = new Atom(2, { skipSerialization: true });
 
         constructor() {
           super();
