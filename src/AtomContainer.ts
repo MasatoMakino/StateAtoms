@@ -4,6 +4,32 @@ import type { AtomEventArgs } from "./AtomEventArgs.js";
 import type { AtomEvents } from "./AtomEvents.js";
 
 /**
+ * Type inference helper that extracts AtomEvents type from DataType structure.
+ *
+ * This utility type automatically derives the appropriate AtomEvents type
+ * based on the value types present in the DataType interface.
+ * When EventTypes is not explicitly specified in AtomContainer, this type
+ * will be used to provide enhanced type safety for event handlers.
+ *
+ * @template DataType - The data structure type containing atom properties
+ *
+ * @example
+ * ```typescript
+ * type MyData = { count: number; name: string };
+ * type InferredEvents = InferredEventTypes<MyData>;
+ * // Result: AtomEvents<number | string>
+ * ```
+ *
+ * @since 0.2.0
+ */
+export type InferredEventTypes<DataType> = DataType extends Record<
+  string,
+  infer U
+>
+  ? AtomEvents<U>
+  : AtomEvents<unknown>;
+
+/**
  * Modern configuration options for AtomContainer instances.
  * This is the preferred API that uses consistent naming conventions.
  *
@@ -76,12 +102,15 @@ export type AtomContainerOptions =
  * discovers and manages child atoms and containers.
  *
  * @template DataType - The type of data this container holds when serialized
- * @template EventTypes - The type of events this container can emit
- *   You can extend the event types, but this may cause listener arguments to be interpreted as 'any'.
+ * @template EventTypes - The type of events this container can emit. When omitted,
+ *   EventTypes will be automatically inferred from DataType structure, providing
+ *   enhanced type safety for event handlers. You can also explicitly specify custom
+ *   event types, but this may cause listener arguments to be interpreted as 'any'.
  *   Instead, consider having an EventEmitter member variable for custom events.
  *
  * @example
  * ```typescript
+ * // Basic usage with automatic type inference
  * class UserContainer extends AtomContainer<{name: string, age: number}> {
  *   name = new Atom("John");
  *   age = new Atom(30);
@@ -93,8 +122,10 @@ export type AtomContainerOptions =
  * }
  *
  * const user = new UserContainer();
+ * // Event handlers now have inferred types: AtomEventArgs<string | number>
  * user.on("change", (args) => {
- *   console.log("User data changed:", args);
+ *   console.log(`Value changed from ${args.valueFrom} to ${args.value}`);
+ *   // args.value is typed as string | number
  * });
  * ```
  *
@@ -106,13 +137,35 @@ export type AtomContainerOptions =
  * container.redo(); // Redo last undone change
  * ```
  *
+ * @example
+ * ```typescript
+ * // Comparison: Automatic inference vs explicit type specification
+ *
+ * // Automatic type inference (recommended)
+ * class AutoContainer extends AtomContainer<{count: number, active: boolean}> {
+ *   count = new Atom(0);
+ *   active = new Atom(false);
+ *   constructor() { super(); this.init(); }
+ * }
+ *
+ * // Explicit type specification (for custom events)
+ * interface CustomEvents extends AtomEvents<number | boolean> {
+ *   customEvent: (data: string) => void;
+ * }
+ * class CustomContainer extends AtomContainer<{count: number, active: boolean}, CustomEvents> {
+ *   count = new Atom(0);
+ *   active = new Atom(false);
+ *   constructor() { super(); this.init(); }
+ * }
+ * ```
+ *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
  * @see {@link AtomContainerOptions} for configuration options
  */
 export class AtomContainer<
   DataType = unknown,
-  EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
+  EventTypes extends AtomEvents<unknown> = InferredEventTypes<DataType>,
 > extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
    * Determines whether this container should be excluded from serialization
