@@ -4,32 +4,6 @@ import type { AtomEventArgs } from "./AtomEventArgs.js";
 import type { AtomEvents } from "./AtomEvents.js";
 
 /**
- * Type inference helper that extracts AtomEvents type from DataType structure.
- *
- * This utility type automatically derives the appropriate AtomEvents type
- * based on the value types present in the DataType interface.
- * When EventTypes is not explicitly specified in AtomContainer, this type
- * will be used to provide enhanced type safety for event handlers.
- *
- * @template DataType - The data structure type containing atom properties
- *
- * @example
- * ```typescript
- * type MyData = { count: number; name: string };
- * type InferredEvents = InferredEventTypes<MyData>;
- * // Result: AtomEvents<number | string>
- * ```
- *
- * @since 0.2.0
- */
-export type InferredEventTypes<DataType> = DataType extends Record<
-  string,
-  infer U
->
-  ? AtomEvents<U>
-  : AtomEvents<unknown>;
-
-/**
  * Modern configuration options for AtomContainer instances.
  * This is the preferred API that uses consistent naming conventions.
  *
@@ -137,27 +111,72 @@ export type AtomContainerOptions =
  * container.redo(); // Redo last undone change
  * ```
  *
- * @example
+ * ## Design Background
+ *
+ * **Event Bubbling Architecture**
+ * AtomContainer uses a simple event bubbling mechanism where child atom events
+ * are propagated unchanged to the container level. This design provides:
+ * - Consistent hierarchical event flow
+ * - Minimal performance overhead
+ * - Simple implementation and maintenance
+ *
+ * **Type System Limitations**
+ * Due to the dynamic nature of event bubbling, TypeScript's compile-time type
+ * inference cannot accurately represent the runtime behavior where different
+ * atoms emit events with different specific types. The EventTypes parameter
+ * defaults to `AtomEvents<unknown>` to acknowledge this limitation.
+ *
+ * ## Event Listener Best Practices
+ *
+ * **Pattern 1: Explicit Type Specification (Recommended)**
  * ```typescript
- * // Comparison: Automatic inference vs explicit type specification
+ * class UserContainer extends AtomContainer<{name: string, age: number}> {
+ *   name = new Atom("");
+ *   age = new Atom(0);
  *
- * // Automatic type inference (recommended)
- * class AutoContainer extends AtomContainer<{count: number, active: boolean}> {
- *   count = new Atom(0);
- *   active = new Atom(false);
- *   constructor() { super(); this.init(); }
- * }
+ *   constructor() {
+ *     super();
+ *     this.init();
  *
- * // Explicit type specification (for custom events)
- * interface CustomEvents extends AtomEvents<number | boolean> {
- *   customEvent: (data: string) => void;
- * }
- * class CustomContainer extends AtomContainer<{count: number, active: boolean}, CustomEvents> {
- *   count = new Atom(0);
- *   active = new Atom(false);
- *   constructor() { super(); this.init(); }
+ *     // Handle specific atom types explicitly
+ *     this.on("change", (args: AtomEventArgs<string>) => {
+ *       if (args.from === this.name) {
+ *         console.log(`Name changed: ${args.value.toUpperCase()}`);
+ *       }
+ *     });
+ *   }
  * }
  * ```
+ *
+ * **Pattern 2: Event Source Branching**
+ * ```typescript
+ * container.on("change", (args) => {
+ *   if (args.from === container.countAtom) {
+ *     // Handle as number
+ *     console.log(`Count: ${(args.value as number).toFixed(0)}`);
+ *   } else if (args.from === container.nameAtom) {
+ *     // Handle as string
+ *     console.log(`Name: ${(args.value as string).length} chars`);
+ *   }
+ * });
+ * ```
+ *
+ * **Pattern 3: Runtime Type Guards**
+ * ```typescript
+ * container.on("change", (args) => {
+ *   if (typeof args.value === 'number') {
+ *     console.log(`Number: ${args.value.toFixed(2)}`);
+ *   } else if (typeof args.value === 'string') {
+ *     console.log(`String: "${args.value}"`);
+ *   }
+ * });
+ * ```
+ *
+ * **Important Notes:**
+ * - Event handlers receive the exact `AtomEventArgs<T>` from the originating atom
+ * - Multiple atoms with different types will trigger separate events
+ * - Runtime type checking or explicit type specification is recommended
+ * - The `EventTypes` parameter can be customized for additional type safety
  *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
@@ -165,7 +184,7 @@ export type AtomContainerOptions =
  */
 export class AtomContainer<
   DataType = unknown,
-  EventTypes extends AtomEvents<unknown> = InferredEventTypes<DataType>,
+  EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
 > extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
    * Determines whether this container should be excluded from serialization

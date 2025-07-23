@@ -3,7 +3,6 @@ import {
   Atom,
   AtomContainer,
   type AtomContainerOptions,
-  type AtomEventArgs,
 } from "../src/index.js";
 
 /**
@@ -13,27 +12,6 @@ import {
 export class SimpleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2);
-  constructor(options?: AtomContainerOptions) {
-    super(options);
-    this.init();
-  }
-}
-
-/**
- * Test helper class for type inference validation.
- * Defines specific DataType structure to test automatic EventTypes inference.
- */
-interface TypedContainerData {
-  count: number;
-  active: boolean;
-  name: string;
-}
-
-export class TypedAtomContainer extends AtomContainer<TypedContainerData> {
-  readonly count = new Atom(0);
-  readonly active = new Atom(false);
-  readonly name = new Atom("");
-
   constructor(options?: AtomContainerOptions) {
     super(options);
     this.init();
@@ -205,84 +183,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       expect(container.atom1.value).toBe(999);
       expect(container.atom2.value).toBe(originalAtom2Value); // Unchanged
-    });
-  });
-
-  describe("Type inference functionality", () => {
-    it("should automatically infer event types from DataType structure", () => {
-      const container = new TypedAtomContainer();
-
-      const changeHandler = vi.fn((args: AtomEventArgs<unknown>) => {
-        // Verify that the value types are as expected for our DataType
-        expect(["number", "boolean", "string"]).toContain(typeof args.value);
-      });
-
-      container.on("change", changeHandler);
-
-      // Test all different value types from DataType
-      container.count.value = 42;
-      container.active.value = true;
-      container.name.value = "test";
-
-      expect(changeHandler).toHaveBeenCalledTimes(3);
-    });
-
-    it("should provide type-safe event handlers with inferred union types", () => {
-      const container = new TypedAtomContainer();
-
-      const beforeChangeHandler = vi.fn();
-      const changeHandler = vi.fn();
-
-      container.on("beforeChange", beforeChangeHandler);
-      container.on("change", changeHandler);
-
-      container.count.value = 100;
-
-      expect(beforeChangeHandler).toHaveBeenCalledOnce();
-      expect(changeHandler).toHaveBeenCalledOnce();
-
-      const changeArgs = changeHandler.mock.calls[0][0];
-      expect(changeArgs.value).toBe(100);
-      expect(changeArgs.valueFrom).toBe(0);
-      expect(changeArgs.from).toBe(container.count);
-    });
-
-    it("should handle serialization with inferred types", () => {
-      const container = new TypedAtomContainer();
-
-      container.count.value = 123;
-      container.active.value = true;
-      container.name.value = "inferred";
-
-      const serialized = container.toObject();
-      expect(serialized).toEqual({
-        count: 123,
-        active: true,
-        name: "inferred",
-      });
-
-      // Test deserialization maintains type safety
-      const newContainer = new TypedAtomContainer();
-      newContainer.fromObject(serialized);
-
-      expect(newContainer.count.value).toBe(123);
-      expect(newContainer.active.value).toBe(true);
-      expect(newContainer.name.value).toBe("inferred");
-    });
-
-    it("should maintain backward compatibility with untyped containers", () => {
-      const untypedContainer = new SimpleAtomContainer();
-
-      const changeHandler = vi.fn();
-      untypedContainer.on("change", changeHandler);
-
-      untypedContainer.atom1.value = 999;
-
-      expect(changeHandler).toHaveBeenCalledOnce();
-
-      const changeArgs = changeHandler.mock.calls[0][0];
-      expect(changeArgs.value).toBe(999);
-      expect(changeArgs.from).toBe(untypedContainer.atom1);
     });
   });
 
