@@ -76,15 +76,15 @@ export type AtomContainerOptions =
  * discovers and manages child atoms and containers.
  *
  * @template DataType - The type of data this container holds when serialized
- * @template EventTypes - The type of events this container can emit. When omitted,
- *   EventTypes will be automatically inferred from DataType structure, providing
- *   enhanced type safety for event handlers. You can also explicitly specify custom
- *   event types, but this may cause listener arguments to be interpreted as 'any'.
- *   Instead, consider having an EventEmitter member variable for custom events.
+ * @template EventTypes - The type of events this container can emit. Defaults to
+ *   `AtomEvents<unknown>` due to the dynamic nature of event bubbling where different
+ *   atoms emit events with different specific types. For type safety, use explicit
+ *   type specification in event handlers or consider custom EventTypes for additional
+ *   type constraints.
  *
  * @example
  * ```typescript
- * // Basic usage with automatic type inference
+ * // Basic usage with explicit type handling
  * class UserContainer extends AtomContainer<{name: string, age: number}> {
  *   name = new Atom("John");
  *   age = new Atom(30);
@@ -92,14 +92,24 @@ export type AtomContainerOptions =
  *   constructor() {
  *     super();
  *     this.init(); // Required after adding member atoms
+ *
+ *     // Recommended: Use explicit type specification
+ *     this.on("change", (args: AtomEventArgs<string>) => {
+ *       if (args.from === this.name) {
+ *         console.log(`Name changed: ${args.value.toUpperCase()}`);
+ *       }
+ *     });
  *   }
  * }
  *
  * const user = new UserContainer();
- * // Event handlers now have inferred types: AtomEventArgs<string | number>
+ * // Use type guards for runtime safety
  * user.on("change", (args) => {
- *   console.log(`Value changed from ${args.valueFrom} to ${args.value}`);
- *   // args.value is typed as string | number
+ *   if (typeof args.value === 'string') {
+ *     console.log(`String value: ${args.value}`);
+ *   } else if (typeof args.value === 'number') {
+ *     console.log(`Number value: ${args.value}`);
+ *   }
  * });
  * ```
  *
