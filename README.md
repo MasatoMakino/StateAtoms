@@ -12,7 +12,7 @@ A lightweight state management library for TypeScript that divides application s
 - **Deep Equality Support**: ObjectAtom with intelligent change detection for complex objects
 - **Serialization**: Built-in JSON serialization and deserialization
 - **History Management**: Optional undo/redo functionality
-- **TypeScript Support**: Full type safety with automatic type inference
+- **TypeScript Support**: Full type safety with explicit event type specification
 - **Lightweight**: Minimal dependencies (eventemitter3, fast-equals)
 
 ## Overview
@@ -115,9 +115,15 @@ Use the container:
 const app = new AppContainer();
 
 // Listen to all changes in the container
+// Use explicit type specification for type safety
 app.on("change", (args) => {
   console.log(`Changed: ${args.from.constructor.name}`);
   console.log(`Value: ${args.valueFrom} -> ${args.value}`);
+  
+  // Recommended: Use explicit typing or type guards
+  if (args.from === app.count) {
+    console.log(`Count changed to: ${args.value as number}`);
+  }
 });
 
 // Changes to any atom trigger container events
@@ -228,10 +234,18 @@ Extends Atom with deep equality comparison for objects.
 - Uses `fast-equals` for structural comparison
 - Same API as Atom but with smarter change detection
 
-### AtomContainer\<DataType>
+### AtomContainer\<DataType, EventTypes?>
 
-Manages multiple atoms with hierarchical event propagation.
+Manages multiple atoms with hierarchical event propagation and explicit event type handling.
 
+**Type Parameters:**
+- `DataType`: The structure of data when serialized (e.g., `{ count: number; name: string }`)
+- `EventTypes`: Event types (defaults to `AtomEvents<unknown>` for maximum flexibility)
+
+**Event Type Handling:**
+EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event bubbling. For type safety, use explicit type specification in event handlers or type guards to handle different atom types appropriately.
+
+**Methods:**
 - `constructor(options?)`: Create container with optional history
 - `toObject()`: Serialize to plain object
 - `toJson()`: Serialize to JSON string
@@ -243,9 +257,45 @@ Manages multiple atoms with hierarchical event propagation.
 - `addHistory()`: Manually add current state to history
 
 **Events:**
-- `change`: Propagated from child atoms/containers
-- `beforeChange`: Propagated from child atoms/containers
+- `change`: Propagated from child atoms/containers (typed based on DataType)
+- `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
 - `addHistory`: Emitted when history entry is added
+
+**Event Handling Examples:**
+```typescript
+// Recommended: Explicit type specification in event handlers
+class MyContainer extends AtomContainer<{ count: number; active: boolean }> {
+  count = new Atom(0);
+  active = new Atom(false);
+  
+  constructor() {
+    super();
+    this.init();
+    
+    // Pattern 1: Explicit type specification
+    this.on("change", (args: AtomEventArgs<number>) => {
+      if (args.from === this.count) {
+        console.log(`Count: ${args.value}`);
+      }
+    });
+    
+    // Pattern 2: Type guards
+    this.on("change", (args) => {
+      if (typeof args.value === 'number') {
+        console.log(`Number value: ${args.value}`);
+      }
+    });
+  }
+}
+
+// Custom events with explicit EventTypes
+interface CustomEvents extends AtomEvents<unknown> {
+  customEvent: (data: string) => void;
+}
+class CustomContainer extends AtomContainer<{ count: number; active: boolean }, CustomEvents> {
+  // Custom event types with explicit specification
+}
+```
 
 ## Development
 

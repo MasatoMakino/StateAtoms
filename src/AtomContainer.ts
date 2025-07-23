@@ -76,12 +76,15 @@ export type AtomContainerOptions =
  * discovers and manages child atoms and containers.
  *
  * @template DataType - The type of data this container holds when serialized
- * @template EventTypes - The type of events this container can emit
- *   You can extend the event types, but this may cause listener arguments to be interpreted as 'any'.
- *   Instead, consider having an EventEmitter member variable for custom events.
+ * @template EventTypes - The type of events this container can emit. Defaults to
+ *   `AtomEvents<unknown>` due to the dynamic nature of event bubbling where different
+ *   atoms emit events with different specific types. For type safety, use explicit
+ *   type specification in event handlers or consider custom EventTypes for additional
+ *   type constraints.
  *
  * @example
  * ```typescript
+ * // Basic usage with explicit type handling
  * class UserContainer extends AtomContainer<{name: string, age: number}> {
  *   name = new Atom("John");
  *   age = new Atom(30);
@@ -89,12 +92,24 @@ export type AtomContainerOptions =
  *   constructor() {
  *     super();
  *     this.init(); // Required after adding member atoms
+ *
+ *     // Recommended: Use explicit type specification
+ *     this.on("change", (args: AtomEventArgs<string>) => {
+ *       if (args.from === this.name) {
+ *         console.log(`Name changed: ${args.value.toUpperCase()}`);
+ *       }
+ *     });
  *   }
  * }
  *
  * const user = new UserContainer();
+ * // Use type guards for runtime safety
  * user.on("change", (args) => {
- *   console.log("User data changed:", args);
+ *   if (typeof args.value === 'string') {
+ *     console.log(`String value: ${args.value}`);
+ *   } else if (typeof args.value === 'number') {
+ *     console.log(`Number value: ${args.value}`);
+ *   }
  * });
  * ```
  *
@@ -105,6 +120,73 @@ export type AtomContainerOptions =
  * container.undo(); // Undo last change
  * container.redo(); // Redo last undone change
  * ```
+ *
+ * ## Design Background
+ *
+ * **Event Bubbling Architecture**
+ * AtomContainer uses a simple event bubbling mechanism where child atom events
+ * are propagated unchanged to the container level. This design provides:
+ * - Consistent hierarchical event flow
+ * - Minimal performance overhead
+ * - Simple implementation and maintenance
+ *
+ * **Type System Limitations**
+ * Due to the dynamic nature of event bubbling, TypeScript's compile-time type
+ * inference cannot accurately represent the runtime behavior where different
+ * atoms emit events with different specific types. The EventTypes parameter
+ * defaults to `AtomEvents<unknown>` to acknowledge this limitation.
+ *
+ * ## Event Listener Best Practices
+ *
+ * **Pattern 1: Explicit Type Specification (Recommended)**
+ * ```typescript
+ * class UserContainer extends AtomContainer<{name: string, age: number}> {
+ *   name = new Atom("");
+ *   age = new Atom(0);
+ *
+ *   constructor() {
+ *     super();
+ *     this.init();
+ *
+ *     // Handle specific atom types explicitly
+ *     this.on("change", (args: AtomEventArgs<string>) => {
+ *       if (args.from === this.name) {
+ *         console.log(`Name changed: ${args.value.toUpperCase()}`);
+ *       }
+ *     });
+ *   }
+ * }
+ * ```
+ *
+ * **Pattern 2: Event Source Branching**
+ * ```typescript
+ * container.on("change", (args) => {
+ *   if (args.from === container.countAtom) {
+ *     // Handle as number
+ *     console.log(`Count: ${(args.value as number).toFixed(0)}`);
+ *   } else if (args.from === container.nameAtom) {
+ *     // Handle as string
+ *     console.log(`Name: ${(args.value as string).length} chars`);
+ *   }
+ * });
+ * ```
+ *
+ * **Pattern 3: Runtime Type Guards**
+ * ```typescript
+ * container.on("change", (args) => {
+ *   if (typeof args.value === 'number') {
+ *     console.log(`Number: ${args.value.toFixed(2)}`);
+ *   } else if (typeof args.value === 'string') {
+ *     console.log(`String: "${args.value}"`);
+ *   }
+ * });
+ * ```
+ *
+ * **Important Notes:**
+ * - Event handlers receive the exact `AtomEventArgs<T>` from the originating atom
+ * - Multiple atoms with different types will trigger separate events
+ * - Runtime type checking or explicit type specification is recommended
+ * - The `EventTypes` parameter can be customized for additional type safety
  *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
