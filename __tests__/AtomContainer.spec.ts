@@ -274,7 +274,9 @@ describe("AtomContainer - Hierarchical state management with event propagation a
   });
 
   describe("Event propagation validation", () => {
-    it("should propagate events in correct order for nested containers", () => {
+    it("should maintain event argument integrity through propagation", () => {
+      // This test documents and validates the current event propagation order.
+      // The order reflects the "immediate re-emission" implementation pattern.
       class NestedContainer extends AtomContainer {
         child = new SimpleAtomContainer();
 
@@ -299,6 +301,8 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       container.child.atom1.value = 999;
 
+      // This order is the result of immediate re-emission: when a child emits an event,
+      // the parent immediately re-emits it before the child's event processing completes.
       expect(eventOrder).toEqual([
         "parent-beforeChange",
         "child-beforeChange",
