@@ -12,7 +12,7 @@ A lightweight state management library for TypeScript that divides application s
 - **Deep Equality Support**: ObjectAtom with intelligent change detection for complex objects
 - **Serialization**: Built-in JSON serialization and deserialization
 - **History Management**: Optional undo/redo functionality
-- **TypeScript Support**: Full type safety with automatic type inference
+- **TypeScript Support**: Full type safety with automatic event type inference
 - **Lightweight**: Minimal dependencies (eventemitter3, fast-equals)
 
 ## Overview
@@ -115,7 +115,9 @@ Use the container:
 const app = new AppContainer();
 
 // Listen to all changes in the container
+// Event handlers now have automatic type inference based on DataType
 app.on("change", (args) => {
+  // args.value is automatically typed as: { name: string; age: number } | number | { theme: string }
   console.log(`Changed: ${args.from.constructor.name}`);
   console.log(`Value: ${args.valueFrom} -> ${args.value}`);
 });
@@ -228,10 +230,18 @@ Extends Atom with deep equality comparison for objects.
 - Uses `fast-equals` for structural comparison
 - Same API as Atom but with smarter change detection
 
-### AtomContainer\<DataType>
+### AtomContainer\<DataType, EventTypes?>
 
-Manages multiple atoms with hierarchical event propagation.
+Manages multiple atoms with hierarchical event propagation and automatic type inference.
 
+**Type Parameters:**
+- `DataType`: The structure of data when serialized (e.g., `{ count: number; name: string }`)
+- `EventTypes`: Event types (automatically inferred from DataType if omitted)
+
+**Automatic Type Inference:**
+When `EventTypes` is omitted, AtomContainer automatically infers event handler types from your DataType structure, providing enhanced type safety without manual type specification.
+
+**Methods:**
 - `constructor(options?)`: Create container with optional history
 - `toObject()`: Serialize to plain object
 - `toJson()`: Serialize to JSON string
@@ -243,9 +253,25 @@ Manages multiple atoms with hierarchical event propagation.
 - `addHistory()`: Manually add current state to history
 
 **Events:**
-- `change`: Propagated from child atoms/containers
-- `beforeChange`: Propagated from child atoms/containers
+- `change`: Propagated from child atoms/containers (typed based on DataType)
+- `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
 - `addHistory`: Emitted when history entry is added
+
+**Type Inference Examples:**
+```typescript
+// Automatic inference (recommended)
+class MyContainer extends AtomContainer<{ count: number; active: boolean }> {
+  // Event handlers automatically typed as AtomEventArgs<number | boolean>
+}
+
+// Explicit type specification (for custom events)
+interface CustomEvents extends AtomEvents<number | boolean> {
+  customEvent: (data: string) => void;
+}
+class CustomContainer extends AtomContainer<{ count: number; active: boolean }, CustomEvents> {
+  // Custom event types with manual specification
+}
+```
 
 ## Development
 
