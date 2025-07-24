@@ -188,6 +188,74 @@ export type AtomContainerOptions =
  * - Runtime type checking or explicit type specification is recommended
  * - The `EventTypes` parameter can be customized for additional type safety
  *
+ * ## Design Background: Why Manual init() is Required
+ *
+ * **Inheritance-Based Architecture**
+ * AtomContainer is designed to be extended with member atoms initialized in constructors
+ * using constructor parameters:
+ *
+ * ```typescript
+ * class UserContainer extends AtomContainer<{name: string, age: number}> {
+ *   private name: Atom<string>;  // Field declaration only
+ *   private age: Atom<number>;
+ *
+ *   constructor(initialData: {name: string, age: number}) {
+ *     super();
+ *     // Member atoms initialized using constructor arguments
+ *     this.name = new Atom(initialData.name);
+ *     this.age = new Atom(initialData.age);
+ *     this.init(); // Required after all member initialization
+ *   }
+ * }
+ * ```
+ *
+ * **Technical Constraints**
+ * 1. **Member Initialization Uncertainty**: In inherited classes, it's impossible to determine
+ *    if all member atoms are properly initialized until the constructor completes
+ * 2. **Constructor Execution Order**: The timing of the parent AtomContainer constructor
+ *    execution cannot be predetermined in inheritance scenarios
+ * 3. **Implementation Flexibility**: Member atoms can be initialized either as class fields
+ *    (`name = new Atom("default")`) or in constructors (`this.name = new Atom(param)`).
+ *    This choice depends on the inheriting class implementation and cannot be enforced
+ * 4. **Automatic Discovery Limitation**: AtomContainer cannot automatically discover and
+ *    register member atoms until all members are guaranteed to be initialized
+ *
+ * **Design Decision**
+ * Therefore, init() execution is the responsibility of the inheriting class, ensuring:
+ * - All member atoms are fully initialized (regardless of initialization pattern)
+ * - Constructor parameters are processed
+ * - Proper timing of event registration and history setup
+ *
+ * ## Future Improvements
+ *
+ * **Primary Solution: Automatic Initialization with Decorators**
+ * This limitation will be resolved when TypeScript decorators can be applied to
+ * AtomContainer constructors, enabling automatic post-construction initialization.
+ * Decorators are supported in TypeScript 5.0+ without experimental flags, but native
+ * browser support is still limited, requiring transpilation for production use.
+ *
+ * **Alternative Solution: Factory Method Pattern (Major Version)**
+ * If decorator browser implementation stagnates, a factory method approach may be considered
+ * in a future major version to eliminate manual init() calls:
+ *
+ * ```typescript
+ * // Proposed factory method API (breaking change)
+ * const container = AtomContainer.create<UserData>((instance) => {
+ *   instance.name = new Atom(initialData.name);
+ *   instance.age = new Atom(initialData.age);
+ *   // init() would be called automatically after factory function
+ * });
+ * ```
+ *
+ * This approach would:
+ * - Eliminate manual init() calls completely
+ * - Provide guaranteed initialization timing
+ * - Require major API changes (breaking existing code)
+ * - Hide the constructor to enforce proper initialization
+ *
+ * **Current Status**: Decorators remain the preferred solution due to minimal API impact.
+ * Factory method approach is reserved for potential major version upgrade if needed.
+ *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
  * @see {@link AtomContainerOptions} for configuration options
@@ -226,9 +294,63 @@ export class AtomContainer<
   private _useHistory: boolean;
 
   /**
+   * Event listener function for beforeChange events.
+   *
+   * @private
+   */
+  private _beforeChangeListener = (arg: AtomEventArgs<unknown>) => {
+    this.emit("beforeChange", arg);
+  };
+
+  /**
+   * Event listener function for change events.
+   *
+   * @private
+   */
+  private _changeListener = (arg: AtomEventArgs<unknown>) => {
+    this.emit("change", arg);
+  };
+
+  /**
+   * Event listener function for addHistory events.
+   *
+   * @private
+   */
+  private _addHistoryListener = () => {
+    this.emit("addHistory");
+  };
+
+  /**
    * Creates a new AtomContainer instance.
    *
+   * **Important**: After creating the instance and initializing member atoms, you must call `this.init()`
+   * in your constructor to properly initialize the container.
+   *
    * @param options - Configuration options
+   *
+   * @example
+   * ```typescript
+   * // Field initialization pattern
+   * class FieldContainer extends AtomContainer<{count: number}> {
+   *   count = new Atom(0);
+   *
+   *   constructor() {
+   *     super();
+   *     this.init(); // Required - call after member atoms are ready
+   *   }
+   * }
+   *
+   * // Constructor initialization pattern
+   * class ParamContainer extends AtomContainer<{count: number}> {
+   *   private count: Atom<number>;
+   *
+   *   constructor(initialCount: number) {
+   *     super();
+   *     this.count = new Atom(initialCount);
+   *     this.init(); // Required - call after member atoms are initialized
+   *   }
+   * }
+   * ```
    */
   constructor(options?: AtomContainerOptionsModern);
 
@@ -262,9 +384,45 @@ export class AtomContainer<
 
   /**
    * Initializes the container by adding member atoms/containers and setting up history.
-   * This method must be called in the constructor after all member atoms are added.
+   *
+   * **This method is required and must be called in the constructor after all member atoms are added.**
+   * The method is idempotent - it can be safely called multiple times without side effects.
+   *
+   * Failure to call this method will result in:
+   * - Member atoms not being discovered or registered for event propagation
+   * - History functionality not being initialized (if enabled)
+   * - Runtime errors when attempting to use container operations
    *
    * @protected
+   *
+   * @example
+   * ```typescript
+   * class MyContainer extends AtomContainer {
+   *   myAtom = new Atom("initial");
+   *
+   *   constructor() {
+   *     super();
+   *     this.init(); // Required - must be called after member atoms are added
+   *   }
+   * }
+   * ```
+   *
+   * ## Future Improvements
+   *
+   * **Automatic Initialization with Decorators**
+   * In a future version, we plan to implement automatic init() execution using TypeScript decorators
+   * once browser support becomes more widespread. This would eliminate the need for manual init() calls:
+   *
+   * ```typescript
+   * @AutoInit  // Future feature - not yet available
+   * class MyContainer extends AtomContainer {
+   *   myAtom = new Atom("initial");
+   *   // init() would be called automatically
+   * }
+   * ```
+   *
+   * **Current Status**: Decorators are supported in TypeScript 5.0+ without experimental flags,
+   * but native browser support is still limited, requiring transpilation for production use.
    */
   protected init() {
     this.addMembers();
@@ -287,25 +445,43 @@ export class AtomContainer<
 
   /**
    * Adds event listeners to propagate events from child atoms/containers.
+   * This method is idempotent - it safely handles multiple calls for the same value.
    *
    * @param value - The atom or container to add event listeners to
    * @private
    */
   private add(value: Atom<unknown> | AtomContainer) {
-    value.on("beforeChange", (arg: AtomEventArgs<unknown>) => {
-      this.emit("beforeChange", arg);
-    });
-    value.on("change", (arg: AtomEventArgs<unknown>) => {
-      this.emit("change", arg);
-    });
-    value.on("addHistory", () => {
-      this.emit("addHistory");
-    });
+    // Check if our specific listeners are already registered
+    const beforeChangeListeners = value.listeners("beforeChange");
+    const changeListeners = value.listeners("change");
+    const addHistoryListeners = value.listeners("addHistory");
+
+    if (!beforeChangeListeners.includes(this._beforeChangeListener)) {
+      value.on("beforeChange", this._beforeChangeListener);
+    }
+
+    if (!changeListeners.includes(this._changeListener)) {
+      value.on("change", this._changeListener);
+    }
+
+    if (!addHistoryListeners.includes(this._addHistoryListener)) {
+      value.on("addHistory", this._addHistoryListener);
+    }
   }
+
+  /**
+   * History listener function for automatic history recording.
+   *
+   * @private
+   */
+  private _historyListener = () => {
+    this.addHistory();
+  };
 
   /**
    * Initializes history tracking if enabled.
    * Sets up automatic history recording on state changes.
+   * This method is idempotent - it safely handles multiple calls.
    *
    * @protected
    */
@@ -314,10 +490,12 @@ export class AtomContainer<
       return;
     }
 
-    this.on("addHistory", () => {
-      this.addHistory();
-    });
-    this.addHistory();
+    // Check if history listener is already registered
+    const addHistoryListeners = this.listeners("addHistory");
+    if (!addHistoryListeners.includes(this._historyListener)) {
+      this.on("addHistory", this._historyListener);
+      this.addHistory(); // Only add initial history if we just registered the listener
+    }
   }
 
   /**

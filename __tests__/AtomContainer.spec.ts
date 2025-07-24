@@ -332,4 +332,119 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       container.child.atom1.value = 42;
     });
   });
+
+  describe("init() method idempotency", () => {
+    it("should allow multiple init() calls without breaking event listeners", () => {
+      class TestContainer extends AtomContainer {
+        atom1 = new Atom(1);
+        atom2 = new Atom(2);
+
+        constructor() {
+          super();
+          this.init(); // First call (required)
+        }
+
+        // Public method to test multiple init calls
+        public reinit() {
+          this.init();
+        }
+      }
+
+      const container = new TestContainer();
+      const spyBeforeChange = vi.fn();
+      const spyChange = vi.fn();
+
+      // Set up event listeners
+      container.on("beforeChange", spyBeforeChange);
+      container.on("change", spyChange);
+
+      // Call init() multiple times
+      container.reinit();
+      container.reinit();
+      container.reinit();
+
+      // Change atom value to trigger events
+      container.atom1.value = 10;
+
+      // Event should be triggered exactly once per change
+      expect(spyBeforeChange).toHaveBeenCalledTimes(1);
+      expect(spyChange).toHaveBeenCalledTimes(1);
+
+      // Event arguments should be correct
+      expect(spyBeforeChange).toHaveBeenCalledWith({
+        from: container.atom1,
+        value: 10,
+        valueFrom: 1,
+      });
+      expect(spyChange).toHaveBeenCalledWith({
+        from: container.atom1,
+        value: 10,
+        valueFrom: 1,
+      });
+    });
+
+    it("should not duplicate listeners when init() is called multiple times", () => {
+      class TestContainer extends AtomContainer {
+        atom1 = new Atom(1);
+
+        constructor() {
+          super();
+          this.init();
+        }
+
+        public reinit() {
+          this.init();
+        }
+      }
+
+      const container = new TestContainer();
+
+      // After first init(), there should be exactly 1 change listener from container
+      expect(container.atom1.listenerCount("change")).toBe(1);
+
+      // Call init multiple times
+      container.reinit();
+      container.reinit();
+
+      // Listener count should remain exactly 1
+      expect(container.atom1.listenerCount("change")).toBe(1);
+    });
+
+    it("should handle history initialization idempotently", () => {
+      class HistoryContainer extends AtomContainer {
+        atom1 = new Atom(1);
+
+        constructor() {
+          super({ useHistory: true });
+          this.init();
+        }
+
+        public reinit() {
+          this.init();
+        }
+      }
+
+      const container = new HistoryContainer();
+      const spyAddHistory = vi.fn();
+
+      // Monitor addHistory events
+      container.on("addHistory", spyAddHistory);
+
+      // After init() with useHistory:true, there should be exactly 2 listeners:
+      // 1. Internal history listener from initHistory()
+      // 2. Test spy listener we just added
+      expect(container.listenerCount("addHistory")).toBe(2);
+
+      // Call init multiple times
+      container.reinit();
+      container.reinit();
+
+      // History listener count should remain exactly 2
+      expect(container.listenerCount("addHistory")).toBe(2);
+
+      // Trigger addHistory manually to verify it still works
+      container.emit("addHistory");
+      expect(spyAddHistory).toHaveBeenCalled();
+    });
+  });
 });
