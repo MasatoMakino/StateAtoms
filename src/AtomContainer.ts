@@ -226,9 +226,51 @@ export class AtomContainer<
   private _useHistory: boolean;
 
   /**
+   * Event listener function for beforeChange events.
+   *
+   * @private
+   */
+  private _beforeChangeListener = (arg: AtomEventArgs<unknown>) => {
+    this.emit("beforeChange", arg);
+  };
+
+  /**
+   * Event listener function for change events.
+   *
+   * @private
+   */
+  private _changeListener = (arg: AtomEventArgs<unknown>) => {
+    this.emit("change", arg);
+  };
+
+  /**
+   * Event listener function for addHistory events.
+   *
+   * @private
+   */
+  private _addHistoryListener = () => {
+    this.emit("addHistory");
+  };
+
+  /**
    * Creates a new AtomContainer instance.
    *
+   * **Important**: After creating the instance and adding member atoms, you must call `this.init()`
+   * in your constructor to properly initialize the container.
+   *
    * @param options - Configuration options
+   *
+   * @example
+   * ```typescript
+   * class MyContainer extends AtomContainer<{count: number}> {
+   *   count = new Atom(0);
+   *
+   *   constructor() {
+   *     super();
+   *     this.init(); // Required - call after member atoms are added
+   *   }
+   * }
+   * ```
    */
   constructor(options?: AtomContainerOptionsModern);
 
@@ -262,9 +304,28 @@ export class AtomContainer<
 
   /**
    * Initializes the container by adding member atoms/containers and setting up history.
-   * This method must be called in the constructor after all member atoms are added.
+   *
+   * **This method is required and must be called in the constructor after all member atoms are added.**
+   * The method is idempotent - it can be safely called multiple times without side effects.
+   *
+   * Failure to call this method will result in:
+   * - Member atoms not being discovered or registered for event propagation
+   * - History functionality not being initialized (if enabled)
+   * - Runtime errors when attempting to use container operations
    *
    * @protected
+   *
+   * @example
+   * ```typescript
+   * class MyContainer extends AtomContainer {
+   *   myAtom = new Atom("initial");
+   *
+   *   constructor() {
+   *     super();
+   *     this.init(); // Required - must be called after member atoms are added
+   *   }
+   * }
+   * ```
    */
   protected init() {
     this.addMembers();
@@ -287,25 +348,43 @@ export class AtomContainer<
 
   /**
    * Adds event listeners to propagate events from child atoms/containers.
+   * This method is idempotent - it safely handles multiple calls for the same value.
    *
    * @param value - The atom or container to add event listeners to
    * @private
    */
   private add(value: Atom<unknown> | AtomContainer) {
-    value.on("beforeChange", (arg: AtomEventArgs<unknown>) => {
-      this.emit("beforeChange", arg);
-    });
-    value.on("change", (arg: AtomEventArgs<unknown>) => {
-      this.emit("change", arg);
-    });
-    value.on("addHistory", () => {
-      this.emit("addHistory");
-    });
+    // Check if our specific listeners are already registered
+    const beforeChangeListeners = value.listeners("beforeChange");
+    const changeListeners = value.listeners("change");
+    const addHistoryListeners = value.listeners("addHistory");
+
+    if (!beforeChangeListeners.includes(this._beforeChangeListener)) {
+      value.on("beforeChange", this._beforeChangeListener);
+    }
+
+    if (!changeListeners.includes(this._changeListener)) {
+      value.on("change", this._changeListener);
+    }
+
+    if (!addHistoryListeners.includes(this._addHistoryListener)) {
+      value.on("addHistory", this._addHistoryListener);
+    }
   }
+
+  /**
+   * History listener function for automatic history recording.
+   *
+   * @private
+   */
+  private _historyListener = () => {
+    this.addHistory();
+  };
 
   /**
    * Initializes history tracking if enabled.
    * Sets up automatic history recording on state changes.
+   * This method is idempotent - it safely handles multiple calls.
    *
    * @protected
    */
@@ -314,10 +393,12 @@ export class AtomContainer<
       return;
     }
 
-    this.on("addHistory", () => {
-      this.addHistory();
-    });
-    this.addHistory();
+    // Check if history listener is already registered
+    const addHistoryListeners = this.listeners("addHistory");
+    if (!addHistoryListeners.includes(this._historyListener)) {
+      this.on("addHistory", this._historyListener);
+      this.addHistory(); // Only add initial history if we just registered the listener
+    }
   }
 
   /**
