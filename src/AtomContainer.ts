@@ -326,6 +326,23 @@ export class AtomContainer<
    *   }
    * }
    * ```
+   *
+   * ## Future Improvements
+   *
+   * **Automatic Initialization with Decorators**
+   * In a future version, we plan to implement automatic init() execution using TypeScript decorators
+   * once browser support becomes more widespread. This would eliminate the need for manual init() calls:
+   *
+   * ```typescript
+   * @AutoInit  // Future feature - not yet available
+   * class MyContainer extends AtomContainer {
+   *   myAtom = new Atom("initial");
+   *   // init() would be called automatically
+   * }
+   * ```
+   *
+   * **Current Status**: Decorators are supported in TypeScript 5.0+ without experimental flags,
+   * but native browser support is still limited, requiring transpilation for production use.
    */
   protected init() {
     this.addMembers();
