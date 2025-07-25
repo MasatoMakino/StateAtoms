@@ -220,7 +220,7 @@ describe("AtomContainer - Console.warn Validation", () => {
       expect(consoleSpy).toHaveBeenCalledTimes(1);
 
       // Manually call init to fix the issue
-      (container as any).init();
+      (container as unknown as { init(): void }).init();
 
       // Subsequent operations should not warn
       container.addHistory();
