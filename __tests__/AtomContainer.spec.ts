@@ -110,6 +110,8 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       expect(container.atom1.value).toBe("string instead of number");
       expect(container.atom2.value).toBeNull();
+      // Unknown keys should not be persisted
+      expect(container.toObject()).not.toHaveProperty("nonExistentProperty");
     });
   });
 
