@@ -55,103 +55,78 @@ class ProperlyInitializedContainer extends AtomContainer<{ value: number }> {
   }
 }
 
+// Test helper functions to reduce code duplication
+const createUninitializedContainerWithSpy = () => {
+  const container = new UninitializedContainer({ name: "Alice", age: 25 });
+  const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  return { container, consoleSpy };
+};
+
+const expectWarningMessage = (
+  consoleSpy: ReturnType<typeof vi.spyOn>,
+  methodName: string,
+) => {
+  expect(consoleSpy).toHaveBeenCalledWith(
+    `UninitializedContainer.${methodName}() was called before init(). ` +
+      "This may cause event system failures. " +
+      "Ensure you call this.init() in your constructor after adding member atoms.",
+  );
+};
+
+const testMethodWarning = (
+  methodName: string,
+  methodCall: (container: UninitializedContainer) => void,
+) => {
+  const { container, consoleSpy } = createUninitializedContainerWithSpy();
+
+  methodCall(container);
+
+  expectWarningMessage(consoleSpy, methodName);
+  consoleSpy.mockRestore();
+};
+
 describe("AtomContainer - Console.warn Validation", () => {
   describe("Warning Behavior for Uninitialized Containers", () => {
     it("should warn when fromObject is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.fromObject({ name: "Bob", age: 30 });
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.fromObject() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("fromObject", (container) => {
+        container.fromObject({ name: "Bob", age: 30 });
+      });
     });
 
     it("should warn when addHistory is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.addHistory();
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.addHistory() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("addHistory", (container) => {
+        container.addHistory();
+      });
     });
 
     it("should warn when undo is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.undo();
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.undo() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("undo", (container) => {
+        container.undo();
+      });
     });
 
     it("should warn when redo is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.redo();
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.redo() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("redo", (container) => {
+        container.redo();
+      });
     });
 
     it("should warn when fromJson is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.fromJson('{"name":"Bob","age":30}');
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.fromJson() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("fromJson", (container) => {
+        container.fromJson('{"name":"Bob","age":30}');
+      });
     });
 
     it("should warn when load is called before init", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      container.load({ name: "Bob", age: 30 });
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.load() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
-      consoleSpy.mockRestore();
+      testMethodWarning("load", (container) => {
+        container.load({ name: "Bob", age: 30 });
+      });
     });
   });
 
   describe("Warning Deduplication", () => {
     it("should only warn once per container instance", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { container, consoleSpy } = createUninitializedContainerWithSpy();
 
       // Call multiple operations - should only warn once
       container.fromObject({ name: "Bob", age: 30 });
@@ -162,12 +137,7 @@ describe("AtomContainer - Console.warn Validation", () => {
       container.load({ name: "David", age: 40 });
 
       expect(consoleSpy).toHaveBeenCalledTimes(1);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "UninitializedContainer.fromObject() was called before init(). " +
-          "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
-      );
-
+      expectWarningMessage(consoleSpy, "fromObject");
       consoleSpy.mockRestore();
     });
 
@@ -243,8 +213,7 @@ describe("AtomContainer - Console.warn Validation", () => {
 
   describe("Manual init() Correction", () => {
     it("should stop warning after manual init() call", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { container, consoleSpy } = createUninitializedContainerWithSpy();
 
       // First operation should warn
       container.fromObject({ name: "Bob", age: 30 });
@@ -259,16 +228,14 @@ describe("AtomContainer - Console.warn Validation", () => {
       container.fromJson('{"name":"Charlie","age":35}');
 
       expect(consoleSpy).toHaveBeenCalledTimes(1); // Still only 1 warning
-
       consoleSpy.mockRestore();
     });
   });
 
   describe("Integration with Event System", () => {
     it("should demonstrate the problem warnings are meant to prevent", () => {
-      const container = new UninitializedContainer({ name: "Alice", age: 25 });
+      const { container, consoleSpy } = createUninitializedContainerWithSpy();
       const changeSpy = vi.fn();
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       // Try to set up event listener - won't work properly without init()
       container.on("change", changeSpy);
