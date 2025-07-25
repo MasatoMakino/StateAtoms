@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3";
 import { Atom } from "./Atom.js";
 import type { AtomEventArgs } from "./AtomEventArgs.js";
 import type { AtomEvents } from "./AtomEvents.js";
+import { InitValidationHelper } from "./utils/InitValidationHelper.js";
 
 /**
  * Modern configuration options for AtomContainer instances.
@@ -84,7 +85,7 @@ export type AtomContainerOptions =
  *
  * @example
  * ```typescript
- * // Basic usage with explicit type handling
+ * // Basic usage patterns
  * class UserContainer extends AtomContainer<{name: string, age: number}> {
  *   name = new Atom("John");
  *   age = new Atom(30);
@@ -93,7 +94,7 @@ export type AtomContainerOptions =
  *     super();
  *     this.init(); // Required after adding member atoms
  *
- *     // Recommended: Use explicit type specification
+ *     // Pattern 1: Explicit type specification (Recommended)
  *     this.on("change", (args: AtomEventArgs<string>) => {
  *       if (args.from === this.name) {
  *         console.log(`Name changed: ${args.value.toUpperCase()}`);
@@ -102,8 +103,17 @@ export type AtomContainerOptions =
  *   }
  * }
  *
+ * // Pattern 2: Event source branching
  * const user = new UserContainer();
- * // Use type guards for runtime safety
+ * user.on("change", (args) => {
+ *   if (args.from === user.name) {
+ *     console.log(`Name: ${(args.value as string).length} chars`);
+ *   } else if (args.from === user.age) {
+ *     console.log(`Age: ${(args.value as number).toFixed(0)}`);
+ *   }
+ * });
+ *
+ * // Pattern 3: Runtime type guards
  * user.on("change", (args) => {
  *   if (typeof args.value === 'string') {
  *     console.log(`String value: ${args.value}`);
@@ -121,140 +131,50 @@ export type AtomContainerOptions =
  * container.redo(); // Redo last undone change
  * ```
  *
- * ## Design Background
+ * ## Architecture & Design
  *
- * **Event Bubbling Architecture**
+ * **Event Bubbling System**
  * AtomContainer uses a simple event bubbling mechanism where child atom events
- * are propagated unchanged to the container level. This design provides:
- * - Consistent hierarchical event flow
- * - Minimal performance overhead
- * - Simple implementation and maintenance
+ * are propagated unchanged to the container level. This provides consistent
+ * hierarchical event flow with minimal performance overhead.
  *
- * **Type System Limitations**
+ * **Type System Considerations**
  * Due to the dynamic nature of event bubbling, TypeScript's compile-time type
- * inference cannot accurately represent the runtime behavior where different
- * atoms emit events with different specific types. The EventTypes parameter
- * defaults to `AtomEvents<unknown>` to acknowledge this limitation.
+ * inference cannot accurately represent runtime behavior where different atoms
+ * emit events with different specific types. The EventTypes parameter defaults
+ * to `AtomEvents<unknown>` to acknowledge this limitation.
  *
- * ## Event Listener Best Practices
- *
- * **Pattern 1: Explicit Type Specification (Recommended)**
- * ```typescript
- * class UserContainer extends AtomContainer<{name: string, age: number}> {
- *   name = new Atom("");
- *   age = new Atom(0);
- *
- *   constructor() {
- *     super();
- *     this.init();
- *
- *     // Handle specific atom types explicitly
- *     this.on("change", (args: AtomEventArgs<string>) => {
- *       if (args.from === this.name) {
- *         console.log(`Name changed: ${args.value.toUpperCase()}`);
- *       }
- *     });
- *   }
- * }
- * ```
- *
- * **Pattern 2: Event Source Branching**
- * ```typescript
- * container.on("change", (args) => {
- *   if (args.from === container.countAtom) {
- *     // Handle as number
- *     console.log(`Count: ${(args.value as number).toFixed(0)}`);
- *   } else if (args.from === container.nameAtom) {
- *     // Handle as string
- *     console.log(`Name: ${(args.value as string).length} chars`);
- *   }
- * });
- * ```
- *
- * **Pattern 3: Runtime Type Guards**
- * ```typescript
- * container.on("change", (args) => {
- *   if (typeof args.value === 'number') {
- *     console.log(`Number: ${args.value.toFixed(2)}`);
- *   } else if (typeof args.value === 'string') {
- *     console.log(`String: "${args.value}"`);
- *   }
- * });
- * ```
- *
- * **Important Notes:**
- * - Event handlers receive the exact `AtomEventArgs<T>` from the originating atom
- * - Multiple atoms with different types will trigger separate events
- * - Runtime type checking or explicit type specification is recommended
- * - The `EventTypes` parameter can be customized for additional type safety
- *
- * ## Design Background: Why Manual init() is Required
- *
- * **Inheritance-Based Architecture**
- * AtomContainer is designed to be extended with member atoms initialized in constructors
- * using constructor parameters:
- *
- * ```typescript
- * class UserContainer extends AtomContainer<{name: string, age: number}> {
- *   private name: Atom<string>;  // Field declaration only
- *   private age: Atom<number>;
- *
- *   constructor(initialData: {name: string, age: number}) {
- *     super();
- *     // Member atoms initialized using constructor arguments
- *     this.name = new Atom(initialData.name);
- *     this.age = new Atom(initialData.age);
- *     this.init(); // Required after all member initialization
- *   }
- * }
- * ```
- *
- * **Technical Constraints**
- * 1. **Member Initialization Uncertainty**: In inherited classes, it's impossible to determine
- *    if all member atoms are properly initialized until the constructor completes
- * 2. **Constructor Execution Order**: The timing of the parent AtomContainer constructor
- *    execution cannot be predetermined in inheritance scenarios
- * 3. **Implementation Flexibility**: Member atoms can be initialized either as class fields
- *    (`name = new Atom("default")`) or in constructors (`this.name = new Atom(param)`).
- *    This choice depends on the inheriting class implementation and cannot be enforced
- * 4. **Automatic Discovery Limitation**: AtomContainer cannot automatically discover and
- *    register member atoms until all members are guaranteed to be initialized
- *
- * **Design Decision**
- * Therefore, init() execution is the responsibility of the inheriting class, ensuring:
+ * **Why Manual init() is Required**
+ * AtomContainer is designed for inheritance with member atoms that can be initialized
+ * either as class fields or in constructors using parameters. Since it's impossible
+ * to determine when all member atoms are properly initialized in inherited classes,
+ * init() execution becomes the responsibility of the inheriting class to ensure:
  * - All member atoms are fully initialized (regardless of initialization pattern)
  * - Constructor parameters are processed
  * - Proper timing of event registration and history setup
  *
- * ## Future Improvements
- *
- * **Primary Solution: Automatic Initialization with Decorators**
- * This limitation will be resolved when TypeScript decorators can be applied to
- * AtomContainer constructors, enabling automatic post-construction initialization.
- * Decorators are supported in TypeScript 5.0+ without experimental flags, but native
- * browser support is still limited, requiring transpilation for production use.
- *
- * **Alternative Solution: Factory Method Pattern (Major Version)**
- * If decorator browser implementation stagnates, a factory method approach may be considered
- * in a future major version to eliminate manual init() calls:
- *
  * ```typescript
- * // Proposed factory method API (breaking change)
- * const container = AtomContainer.create<UserData>((instance) => {
- *   instance.name = new Atom(initialData.name);
- *   instance.age = new Atom(initialData.age);
- *   // init() would be called automatically after factory function
- * });
+ * // Field initialization pattern
+ * class FieldContainer extends AtomContainer<{count: number}> {
+ *   count = new Atom(0);
+ *   constructor() { super(); this.init(); }
+ * }
+ *
+ * // Constructor parameter pattern
+ * class ParamContainer extends AtomContainer<{name: string}> {
+ *   private name: Atom<string>;
+ *   constructor(initialName: string) {
+ *     super();
+ *     this.name = new Atom(initialName);
+ *     this.init(); // Required after member initialization
+ *   }
+ * }
  * ```
  *
- * This approach would:
- * - Eliminate manual init() calls completely
- * - Provide guaranteed initialization timing
- * - Require major API changes (breaking existing code)
- * - Hide the constructor to enforce proper initialization
- *
- * **Current Status**: Decorators remain the preferred solution due to minimal API impact.
- * Factory method approach is reserved for potential major version upgrade if needed.
+ * **Developer Experience Enhancement (v0.1.5+)**
+ * AtomContainer includes automatic validation that warns developers when operations
+ * are called before proper initialization. This provides helpful developer feedback
+ * while maintaining full backward compatibility with zero breaking changes.
  *
  * @since 0.1.0
  * @see {@link Atom} for individual state values
@@ -321,36 +241,26 @@ export class AtomContainer<
   };
 
   /**
+   * Helper for validating container initialization and providing developer warnings.
+   * Tracks whether init() has been called and prevents duplicate warning messages.
+   *
+   * @private
+   */
+  private readonly _initValidator = new InitValidationHelper(
+    this.constructor.name,
+  );
+
+  /**
    * Creates a new AtomContainer instance.
    *
    * **Important**: After creating the instance and initializing member atoms, you must call `this.init()`
    * in your constructor to properly initialize the container.
    *
+   * **Validation**: If you forget to call `init()`, the container will show helpful console warnings
+   * when you attempt to use operations that require initialization (like `fromObject`, `addHistory`, etc.).
+   * This validation helps catch common initialization issues during development.
+   *
    * @param options - Configuration options
-   *
-   * @example
-   * ```typescript
-   * // Field initialization pattern
-   * class FieldContainer extends AtomContainer<{count: number}> {
-   *   count = new Atom(0);
-   *
-   *   constructor() {
-   *     super();
-   *     this.init(); // Required - call after member atoms are ready
-   *   }
-   * }
-   *
-   * // Constructor initialization pattern
-   * class ParamContainer extends AtomContainer<{count: number}> {
-   *   private count: Atom<number>;
-   *
-   *   constructor(initialCount: number) {
-   *     super();
-   *     this.count = new Atom(initialCount);
-   *     this.init(); // Required - call after member atoms are initialized
-   *   }
-   * }
-   * ```
    */
   constructor(options?: AtomContainerOptionsModern);
 
@@ -391,7 +301,8 @@ export class AtomContainer<
    * Failure to call this method will result in:
    * - Member atoms not being discovered or registered for event propagation
    * - History functionality not being initialized (if enabled)
-   * - Runtime errors when attempting to use container operations
+   * - Console warnings when using operations that require initialization
+   * - Potential runtime errors when attempting to use container operations
    *
    * @protected
    *
@@ -406,25 +317,9 @@ export class AtomContainer<
    *   }
    * }
    * ```
-   *
-   * ## Future Improvements
-   *
-   * **Automatic Initialization with Decorators**
-   * In a future version, we plan to implement automatic init() execution using TypeScript decorators
-   * once browser support becomes more widespread. This would eliminate the need for manual init() calls:
-   *
-   * ```typescript
-   * @AutoInit  // Future feature - not yet available
-   * class MyContainer extends AtomContainer {
-   *   myAtom = new Atom("initial");
-   *   // init() would be called automatically
-   * }
-   * ```
-   *
-   * **Current Status**: Decorators are supported in TypeScript 5.0+ without experimental flags,
-   * but native browser support is still limited, requiring transpilation for production use.
    */
   protected init() {
+    this._initValidator.markInitialized();
     this.addMembers();
     this.initHistory();
   }
@@ -508,6 +403,7 @@ export class AtomContainer<
    * ```
    */
   public addHistory() {
+    this._initValidator.validateInitialized("addHistory");
     if (!this._useHistory) {
       return;
     }
@@ -527,6 +423,7 @@ export class AtomContainer<
    * ```
    */
   public undo() {
+    this._initValidator.validateInitialized("undo");
     if (!this._useHistory || this._historyIndex <= 0) {
       return;
     }
@@ -545,6 +442,7 @@ export class AtomContainer<
    * ```
    */
   public redo() {
+    this._initValidator.validateInitialized("redo");
     if (!this._useHistory || this._historyIndex >= this._history.length - 1) {
       return;
     }
@@ -605,6 +503,7 @@ export class AtomContainer<
    * ```
    */
   fromObject(obj: DataType): void {
+    this._initValidator.validateInitialized("fromObject");
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const member = (this as Record<typeof key, unknown>)[key];
       if (member instanceof AtomContainer) {
@@ -631,6 +530,7 @@ export class AtomContainer<
    * ```
    */
   fromJson(json: string): void {
+    this._initValidator.validateInitialized("fromJson");
     const jsonObj = JSON.parse(json);
     this.fromObject(jsonObj);
   }
@@ -648,6 +548,7 @@ export class AtomContainer<
    * ```
    */
   load(obj: DataType) {
+    this._initValidator.validateInitialized("load");
     if (this._useHistory) {
       this._history = [];
       this._historyIndex = -1;
