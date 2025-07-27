@@ -148,6 +148,8 @@ app.fromJson('{"count":15}');
 
 ### History and Undo/Redo
 
+StateAtoms uses manual history management to provide optimal user experience. History snapshots are created at meaningful interaction boundaries, not on every value change.
+
 ```typescript
 class HistoryContainer extends AtomContainer<{ count: number }> {
   count = new Atom(0);
@@ -160,9 +162,15 @@ class HistoryContainer extends AtomContainer<{ count: number }> {
 
 const container = new HistoryContainer();
 
+// Manual history management for meaningful undo points
 container.count.value = 1;
+container.count.emit('addHistory'); // Save meaningful state
+
 container.count.value = 2;
+container.count.emit('addHistory'); // Save another meaningful state
+
 container.count.value = 3;
+container.count.emit('addHistory'); // Save final state
 
 console.log(container.count.value); // 3
 
@@ -175,6 +183,9 @@ console.log(container.count.value); // 1
 container.redo();
 console.log(container.count.value); // 2
 ```
+
+**Why Manual History?**
+Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see `guides/ui-integration-patterns.md`.
 
 ### Advanced Configuration
 

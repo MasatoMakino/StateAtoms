@@ -90,14 +90,39 @@ export interface AtomEvents<T> {
   /**
    * Emitted when a state change should be added to history.
    *
-   * This event is used by AtomContainer instances with history enabled
-   * to trigger automatic history recording. It's emitted after a change
-   * occurs and signals that the current state should be saved for undo/redo.
+   * **Important**: This event must be manually emitted by application code at appropriate
+   * interaction boundaries, not automatically on every value change. This design allows
+   * applications to control when meaningful snapshots are created, preventing excessive
+   * undo/redo entries in high-frequency UI interactions.
+   *
+   * This event is used by AtomContainer instances with history enabled to trigger
+   * manual history management. The event signals that the current state represents
+   * a meaningful user action that should be saved for undo/redo operations.
+   *
+   * ### When to Emit
+   * - End of user interactions (drag end, blur events, form submission)
+   * - Completion of logical operations (not intermediate steps)
+   * - At natural breakpoints that users would expect to undo to
+   *
+   * ### UI Integration Patterns
+   * Different UI elements require different timing strategies for optimal user experience.
+   * See `guides/ui-integration-patterns.md` for comprehensive examples.
    *
    * @example
    * ```typescript
+   * // AtomContainer listening for manual history management requests
    * container.on("addHistory", () => {
    *   console.log("History snapshot taken");
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Manual emission from UI interaction
+   * const textAtom = new Atom("");
+   *
+   * input.addEventListener('blur', () => {
+   *   textAtom.emit('addHistory'); // Save when user finishes editing
    * });
    * ```
    */
