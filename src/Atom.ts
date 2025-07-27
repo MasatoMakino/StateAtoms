@@ -57,6 +57,24 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * events when its value changes. It supports serialization control and integrates
  * with the AtomContainer for hierarchical state management.
  *
+ * ## Event System Design
+ *
+ * Atom emits two types of events with distinct purposes:
+ * - **`change`**: Automatically emitted for immediate UI updates and state synchronization
+ * - **`addHistory`**: Manually emitted to request history snapshots at appropriate user interaction boundaries
+ *
+ * ### Why Manual History Events?
+ *
+ * History events are **not** automatically emitted on value changes to prevent UI performance
+ * issues and poor undo/redo user experience. In high-frequency UI interactions (like dragging
+ * sliders), automatic history would create excessive snapshots that make undo operations
+ * unusable. Instead, applications control when meaningful state snapshots are created.
+ *
+ * ### Loose Coupling with UI
+ *
+ * This design allows UI components to request history snapshots without knowing about
+ * parent containers, maintaining clean separation of concerns.
+ *
  * @template T - The type of value this atom holds
  *
  * @example
@@ -75,9 +93,26 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * const tempAtom = new Atom("temp", { isSkipSerialization: true });
  * ```
  *
+ * @example
+ * ```typescript
+ * // Manual history management for slider UI
+ * const sliderAtom = new Atom(0);
+ *
+ * // During drag: Update value immediately for UI responsiveness
+ * slider.addEventListener('input', (e) => {
+ *   sliderAtom.value = e.target.value; // Only emits "change"
+ * });
+ *
+ * // On drag end: Request history snapshot
+ * slider.addEventListener('change', (e) => {
+ *   sliderAtom.emit('addHistory'); // Request meaningful snapshot
+ * });
+ * ```
+ *
  * @since 0.1.0
  * @see {@link AtomContainer} for managing multiple atoms
  * @see {@link ObjectAtom} for objects requiring deep equality comparison
+ * @see {@link guides/ui-integration-patterns.md} for comprehensive UI integration examples
  */
 export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   protected _value: T;

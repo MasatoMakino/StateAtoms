@@ -19,7 +19,7 @@ export type AtomContainerOptionsModern = {
   skipSerialization?: boolean;
 
   /**
-   * Whether to enable undo/redo functionality with automatic history tracking.
+   * Whether to enable undo/redo functionality with manual history management.
    *
    * @default false
    */
@@ -42,7 +42,7 @@ export type AtomContainerOptionsLegacy = {
   isSkipSerialization?: boolean;
 
   /**
-   * Whether to enable undo/redo functionality with automatic history tracking.
+   * Whether to enable undo/redo functionality with manual history management.
    *
    * @default false
    */
@@ -400,7 +400,7 @@ export class AtomContainer<
   }
 
   /**
-   * History listener function for automatic history recording.
+   * History listener function for manual history management.
    *
    * @private
    */
@@ -409,8 +409,8 @@ export class AtomContainer<
   };
 
   /**
-   * Initializes history tracking if enabled.
-   * Sets up automatic history recording on state changes.
+   * Initializes manual history management if enabled.
+   * Sets up manual history management on addHistory events.
    * This method is idempotent - it safely handles multiple calls.
    *
    * @protected
@@ -430,7 +430,7 @@ export class AtomContainer<
 
   /**
    * Adds the current state to the history stack.
-   * This method is called automatically when history tracking is enabled.
+   * This method is called when addHistory events are emitted.
    *
    * @example
    * ```typescript
