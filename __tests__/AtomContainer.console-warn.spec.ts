@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
 
 /**
- * Test container that intentionally does NOT call init() in constructor.
+ * Test container that intentionally does NOT call connectMemberAtoms() in constructor.
  * Used to verify warning behavior when operations are called before initialization.
  */
 class UninitializedContainer extends AtomContainer<{
@@ -16,7 +16,7 @@ class UninitializedContainer extends AtomContainer<{
     super();
     this.nameAtom = new Atom(data.name);
     this.ageAtom = new Atom(data.age);
-    // NOTE: Intentionally NOT calling this.init() to test warning behavior
+    // NOTE: Intentionally NOT calling this.connectMemberAtoms() to test warning behavior
   }
 
   get name() {
@@ -35,7 +35,7 @@ class UninitializedContainer extends AtomContainer<{
 }
 
 /**
- * Test container that properly calls init() in constructor.
+ * Test container that properly calls connectMemberAtoms() in constructor.
  * Used as control group to verify no warnings when properly initialized.
  */
 class ProperlyInitializedContainer extends AtomContainer<{ value: number }> {
@@ -44,7 +44,7 @@ class ProperlyInitializedContainer extends AtomContainer<{ value: number }> {
   constructor(initialValue: number, options?: { useHistory?: boolean }) {
     super(options);
     this.valueAtom = new Atom(initialValue);
-    this.init(); // Properly calling init()
+    this.connectMemberAtoms(); // Properly calling connectMemberAtoms()
   }
 
   get value() {
@@ -67,9 +67,9 @@ const expectWarningMessage = (
   methodName: string,
 ) => {
   expect(consoleSpy).toHaveBeenCalledWith(
-    `UninitializedContainer.${methodName}() was called before init(). ` +
+    `UninitializedContainer.${methodName}() was called before connectMemberAtoms(). ` +
       "This may cause event system failures. " +
-      "Ensure you call this.init() in your constructor after adding member atoms.",
+      "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
   );
 };
 
@@ -152,15 +152,15 @@ describe("AtomContainer - Console.warn Validation", () => {
       expect(consoleSpy).toHaveBeenCalledTimes(2);
       expect(consoleSpy).toHaveBeenNthCalledWith(
         1,
-        "UninitializedContainer.fromObject() was called before init(). " +
+        "UninitializedContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
       expect(consoleSpy).toHaveBeenNthCalledWith(
         2,
-        "UninitializedContainer.addHistory() was called before init(). " +
+        "UninitializedContainer.addHistory() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -290,9 +290,9 @@ describe("AtomContainer - Console.warn Validation", () => {
       container.fromObject({ test: "updated" });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "CustomNamedContainer.fromObject() was called before init(). " +
+        "CustomNamedContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();

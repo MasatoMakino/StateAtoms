@@ -1,8 +1,8 @@
 /**
  * Helper class for managing AtomContainer initialization validation and warnings.
  *
- * This class tracks whether an AtomContainer has been properly initialized via init()
- * and provides helpful developer warnings when operations are called before initialization.
+ * This class tracks whether an AtomContainer has been properly initialized via connectMemberAtoms()
+ * (or the legacy init() method) and provides helpful developer warnings when operations are called before initialization.
  * It implements smart warning deduplication to prevent console spam while still providing
  * useful debugging information.
  *
@@ -11,9 +11,9 @@
  * class MyContainer extends AtomContainer {
  *   private _validator = new InitValidationHelper('MyContainer');
  *
- *   protected init() {
+ *   public connectMemberAtoms() {
  *     this._validator.markInitialized();
- *     super.init();
+ *     super.connectMemberAtoms();
  *   }
  *
  *   someOperation() {
@@ -27,7 +27,7 @@
  */
 export class InitValidationHelper {
   /**
-   * Whether the container has been properly initialized via init().
+   * Whether the container has been properly initialized via connectMemberAtoms() or init().
    */
   private _isInitialized = false;
 
@@ -56,12 +56,12 @@ export class InitValidationHelper {
   /**
    * Mark the container as properly initialized.
    *
-   * This should be called from the container's init() method to indicate
+   * This should be called from the container's connectMemberAtoms() method to indicate
    * that initialization is complete and operations can safely proceed.
    *
    * @example
    * ```typescript
-   * protected init() {
+   * public connectMemberAtoms() {
    *   this._initValidator.markInitialized();
    *   this.addMembers();
    *   this.initHistory();
@@ -73,7 +73,7 @@ export class InitValidationHelper {
   }
 
   /**
-   * Check if init() has been called and warn if not.
+   * Check if connectMemberAtoms() has been called and warn if not.
    *
    * This method should be called at the beginning of operations that require
    * proper initialization (like fromObject, addHistory, etc.). It will show
@@ -93,9 +93,9 @@ export class InitValidationHelper {
   validateInitialized(operationName: string): void {
     if (!this._isInitialized && !this._hasWarned) {
       console.warn(
-        `${this._containerName}.${operationName}() was called before init(). ` +
+        `${this._containerName}.${operationName}() was called before connectMemberAtoms(). ` +
           `This may cause event system failures. ` +
-          `Ensure you call this.init() in your constructor after adding member atoms.`,
+          `Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.`,
       );
       this._hasWarned = true;
     }

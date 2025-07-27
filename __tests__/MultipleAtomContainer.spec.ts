@@ -12,7 +12,7 @@ export class MultipleAtomContainer extends AtomContainer {
   readonly atomContainer = new SimpleAtomContainer();
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 

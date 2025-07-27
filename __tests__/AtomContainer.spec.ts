@@ -14,7 +14,7 @@ export class SimpleAtomContainer extends AtomContainer {
   readonly atom2 = new Atom(2);
   constructor(options?: AtomContainerOptions) {
     super(options);
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 
@@ -120,7 +120,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       class EmptyContainer extends AtomContainer {
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -140,7 +140,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -194,7 +194,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
         atom = new Atom("level3");
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -203,7 +203,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
         nested = new Level3Container();
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -212,7 +212,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
         nested = new Level2Container();
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -248,7 +248,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -284,7 +284,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -319,7 +319,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
       }
 
@@ -335,20 +335,20 @@ describe("AtomContainer - Hierarchical state management with event propagation a
     });
   });
 
-  describe("init() method idempotency", () => {
-    it("should allow multiple init() calls without breaking event listeners", () => {
+  describe("connectMemberAtoms() method idempotency", () => {
+    it("should allow multiple connectMemberAtoms() calls without breaking event listeners", () => {
       class TestContainer extends AtomContainer {
         atom1 = new Atom(1);
         atom2 = new Atom(2);
 
         constructor() {
           super();
-          this.init(); // First call (required)
+          this.connectMemberAtoms(); // First call (required)
         }
 
         // Public method to test multiple init calls
-        public reinit() {
-          this.init();
+        public reconnectMemberAtoms() {
+          this.connectMemberAtoms();
         }
       }
 
@@ -360,10 +360,10 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       container.on("beforeChange", spyBeforeChange);
       container.on("change", spyChange);
 
-      // Call init() multiple times
-      container.reinit();
-      container.reinit();
-      container.reinit();
+      // Call connectMemberAtoms() multiple times
+      container.reconnectMemberAtoms();
+      container.reconnectMemberAtoms();
+      container.reconnectMemberAtoms();
 
       // Change atom value to trigger events
       container.atom1.value = 10;
@@ -385,28 +385,28 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       });
     });
 
-    it("should not duplicate listeners when init() is called multiple times", () => {
+    it("should not duplicate listeners when connectMemberAtoms() is called multiple times", () => {
       class TestContainer extends AtomContainer {
         atom1 = new Atom(1);
 
         constructor() {
           super();
-          this.init();
+          this.connectMemberAtoms();
         }
 
-        public reinit() {
-          this.init();
+        public reconnectMemberAtoms() {
+          this.connectMemberAtoms();
         }
       }
 
       const container = new TestContainer();
 
-      // After first init(), there should be exactly 1 change listener from container
+      // After first connectMemberAtoms(), there should be exactly 1 change listener from container
       expect(container.atom1.listenerCount("change")).toBe(1);
 
       // Call init multiple times
-      container.reinit();
-      container.reinit();
+      container.reconnectMemberAtoms();
+      container.reconnectMemberAtoms();
 
       // Listener count should remain exactly 1
       expect(container.atom1.listenerCount("change")).toBe(1);
@@ -418,11 +418,11 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super({ useHistory: true });
-          this.init();
+          this.connectMemberAtoms();
         }
 
-        public reinit() {
-          this.init();
+        public reconnectMemberAtoms() {
+          this.connectMemberAtoms();
         }
       }
 
@@ -432,14 +432,14 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       // Monitor addHistory events
       container.on("addHistory", spyAddHistory);
 
-      // After init() with useHistory:true, there should be exactly 2 listeners:
+      // After connectMemberAtoms() with useHistory:true, there should be exactly 2 listeners:
       // 1. Internal history listener from initHistory()
       // 2. Test spy listener we just added
       expect(container.listenerCount("addHistory")).toBe(2);
 
       // Call init multiple times
-      container.reinit();
-      container.reinit();
+      container.reconnectMemberAtoms();
+      container.reconnectMemberAtoms();
 
       // History listener count should remain exactly 2
       expect(container.listenerCount("addHistory")).toBe(2);

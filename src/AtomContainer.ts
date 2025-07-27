@@ -92,7 +92,7 @@ export type AtomContainerOptions =
  *
  *   constructor() {
  *     super();
- *     this.init(); // Required after adding member atoms
+ *     this.connectMemberAtoms(); // Required after adding member atoms
  *
  *     // Pattern 1: Explicit type specification (Recommended)
  *     this.on("change", (args: AtomEventArgs<string>) => {
@@ -144,11 +144,11 @@ export type AtomContainerOptions =
  * emit events with different specific types. The EventTypes parameter defaults
  * to `AtomEvents<unknown>` to acknowledge this limitation.
  *
- * **Why Manual init() is Required**
+ * **Why Manual connectMemberAtoms() is Required**
  * AtomContainer is designed for inheritance with member atoms that can be initialized
  * either as class fields or in constructors using parameters. Since it's impossible
  * to determine when all member atoms are properly initialized in inherited classes,
- * init() execution becomes the responsibility of the inheriting class to ensure:
+ * connectMemberAtoms() execution becomes the responsibility of the inheriting class to ensure:
  * - All member atoms are fully initialized (regardless of initialization pattern)
  * - Constructor parameters are processed
  * - Proper timing of event registration and history setup
@@ -157,7 +157,7 @@ export type AtomContainerOptions =
  * // Field initialization pattern
  * class FieldContainer extends AtomContainer<{count: number}> {
  *   count = new Atom(0);
- *   constructor() { super(); this.init(); }
+ *   constructor() { super(); this.connectMemberAtoms(); }
  * }
  *
  * // Constructor parameter pattern
@@ -166,7 +166,7 @@ export type AtomContainerOptions =
  *   constructor(initialName: string) {
  *     super();
  *     this.name = new Atom(initialName);
- *     this.init(); // Required after member initialization
+ *     this.connectMemberAtoms(); // Required after member initialization
  *   }
  * }
  * ```
@@ -242,7 +242,7 @@ export class AtomContainer<
 
   /**
    * Helper for validating container initialization and providing developer warnings.
-   * Tracks whether init() has been called and prevents duplicate warning messages.
+   * Tracks whether connectMemberAtoms() has been called and prevents duplicate warning messages.
    *
    * @private
    */
@@ -253,10 +253,10 @@ export class AtomContainer<
   /**
    * Creates a new AtomContainer instance.
    *
-   * **Important**: After creating the instance and initializing member atoms, you must call `this.init()`
+   * **Important**: After creating the instance and initializing member atoms, you must call `this.connectMemberAtoms()`
    * in your constructor to properly initialize the container.
    *
-   * **Validation**: If you forget to call `init()`, the container will show helpful console warnings
+   * **Validation**: If you forget to call `connectMemberAtoms()`, the container will show helpful console warnings
    * when you attempt to use operations that require initialization (like `fromObject`, `addHistory`, etc.).
    * This validation helps catch common initialization issues during development.
    *
@@ -293,7 +293,11 @@ export class AtomContainer<
   }
 
   /**
-   * Initializes the container by adding member atoms/containers and setting up history.
+   * Connects member atoms and containers to the event bubbling system.
+   *
+   * This method discovers all Atom and AtomContainer members and registers them
+   * for event propagation. Events from member atoms/containers will bubble up
+   * through the container hierarchy.
    *
    * **This method is required and must be called in the constructor after all member atoms are added.**
    * The method is idempotent - it can be safely called multiple times without side effects.
@@ -303,6 +307,39 @@ export class AtomContainer<
    * - History functionality not being initialized (if enabled)
    * - Console warnings when using operations that require initialization
    * - Potential runtime errors when attempting to use container operations
+   *
+   * @public
+   * @since 0.2.0
+   *
+   * @example
+   * ```typescript
+   * class MyContainer extends AtomContainer {
+   *   myAtom = new Atom("initial");
+   *
+   *   constructor() {
+   *     super();
+   *     this.connectMemberAtoms(); // Required - must be called after member atoms are added
+   *   }
+   * }
+   * ```
+   */
+  public connectMemberAtoms(): void {
+    this._initValidator.markInitialized();
+    this.addMembers();
+    this.initHistory();
+  }
+
+  /**
+   * Initializes the container by adding member atoms/containers and setting up history.
+   *
+   * @deprecated Use connectMemberAtoms() instead. This method will be removed in v1.0.0.
+   *
+   * **Renaming Background (v0.2.0):**
+   * The method name `init()` was ambiguous and caused developer confusion about what
+   * exactly was being initialized. The new name `connectMemberAtoms()` clearly indicates
+   * that this method discovers member atoms/containers and connects them to the event
+   * bubbling system. This renaming improves code self-documentation and developer experience.
+   * The old `init()` method is kept for backward compatibility during the transition period.
    *
    * @protected
    *
@@ -319,9 +356,7 @@ export class AtomContainer<
    * ```
    */
   protected init() {
-    this._initValidator.markInitialized();
-    this.addMembers();
-    this.initHistory();
+    this.connectMemberAtoms();
   }
 
   /**

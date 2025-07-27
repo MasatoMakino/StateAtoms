@@ -14,7 +14,7 @@ export class SimpleAtomContainer extends AtomContainer {
   readonly atom2 = new Atom(2);
   constructor(options?: AtomContainerOptions) {
     super(options);
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 
@@ -46,7 +46,7 @@ describe("AtomContainer - Event Propagation Order Specification", () => {
       child = new SimpleAtomContainer();
       constructor() {
         super();
-        this.init();
+        this.connectMemberAtoms();
       }
     }
 
@@ -77,7 +77,7 @@ describe("AtomContainer - Event Propagation Order Specification", () => {
 
       constructor() {
         super();
-        this.init();
+        this.connectMemberAtoms();
       }
     }
 
@@ -129,7 +129,7 @@ describe("AtomContainer - Event Propagation Order Specification", () => {
 
       constructor() {
         super();
-        this.init();
+        this.connectMemberAtoms();
       }
     }
 
@@ -200,7 +200,7 @@ describe("AtomContainer - Event Propagation Order Specification", () => {
 
       constructor() {
         super();
-        this.init();
+        this.connectMemberAtoms();
       }
     }
 
@@ -234,7 +234,7 @@ describe("AtomContainer - Event Propagation Order Specification", () => {
 
       constructor() {
         super();
-        this.init();
+        this.connectMemberAtoms();
       }
     }
 
