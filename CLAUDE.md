@@ -64,7 +64,7 @@ Uses Biome for linting and formatting (2-space indentation, double quotes, 80 ch
 - Declaration files generated with source maps
 
 ### Architecture Notes
-- All atoms must call `init()` in AtomContainer constructors after adding member atoms
+- All atoms must call `connectMemberAtoms()` in AtomContainer constructors after adding member atoms
 - Event propagation flows upward through container hierarchy
 - Serialization skips atoms/containers with `isSkipSerialization: true`
 - History feature requires `useHistory: true` in container options

@@ -14,7 +14,7 @@ export class SkipAtomContainer extends AtomContainer {
   });
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 
@@ -30,7 +30,7 @@ export class NewSkipAtomContainer extends AtomContainer {
   });
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 
@@ -44,7 +44,7 @@ export class CompatibilityTestContainer extends AtomContainer {
   readonly atomNew = new Atom(3, { skipSerialization: true });
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 

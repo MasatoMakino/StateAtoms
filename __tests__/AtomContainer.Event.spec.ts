@@ -21,7 +21,7 @@ export class ExtendEventContainer extends AtomContainer<
   readonly atom2 = new Atom(2);
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 

@@ -104,7 +104,7 @@ class AppContainer extends AtomContainer<AppState> {
 
   constructor() {
     super();
-    this.init(); // Required after adding member atoms
+    this.connectMemberAtoms(); // Required after adding member atoms
   }
 }
 ```
@@ -154,7 +154,7 @@ class HistoryContainer extends AtomContainer<{ count: number }> {
 
   constructor() {
     super({ useHistory: true }); // Enable history tracking
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 
@@ -208,7 +208,7 @@ class AppContainerWithRuntimeState extends AtomContainer<{
 
   constructor() {
     super({ useHistory: true });
-    this.init();
+    this.connectMemberAtoms();
   }
 }
 ```
@@ -270,7 +270,7 @@ class MyContainer extends AtomContainer<{ count: number; active: boolean }> {
   
   constructor() {
     super();
-    this.init();
+    this.connectMemberAtoms();
     
     // Pattern 1: Explicit type specification
     this.on("change", (args: AtomEventArgs<number>) => {

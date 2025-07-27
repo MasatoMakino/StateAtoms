@@ -36,9 +36,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("fromObject");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "TestContainer.fromObject() was called before init(). " +
+        "TestContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -66,9 +66,9 @@ describe("InitValidationHelper", () => {
 
       expect(consoleSpy).toHaveBeenCalledTimes(1);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "TestContainer.fromObject() was called before init(). " +
+        "TestContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -81,9 +81,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("addHistory");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "UserContainer.addHistory() was called before init(). " +
+        "UserContainer.addHistory() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -96,9 +96,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("fromObject");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "CustomContainer.fromObject() was called before init(). " +
+        "CustomContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -111,9 +111,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("fromObject");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "AtomContainer.fromObject() was called before init(). " +
+        "AtomContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -165,9 +165,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("fromObject");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        ".fromObject() was called before init(). " +
+        ".fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -180,9 +180,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("fromObject");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Special$Container_123.fromObject() was called before init(). " +
+        "Special$Container_123.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -210,9 +210,9 @@ describe("InitValidationHelper", () => {
 
       expect(consoleSpy).toHaveBeenCalledTimes(1);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "TestContainer.fromObject() was called before init(). " +
+        "TestContainer.fromObject() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
@@ -225,9 +225,9 @@ describe("InitValidationHelper", () => {
       helper.validateInitialized("");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "TestContainer.() was called before init(). " +
+        "TestContainer.() was called before connectMemberAtoms(). " +
           "This may cause event system failures. " +
-          "Ensure you call this.init() in your constructor after adding member atoms.",
+          "Ensure you call this.connectMemberAtoms() in your constructor after adding member atoms.",
       );
 
       consoleSpy.mockRestore();
