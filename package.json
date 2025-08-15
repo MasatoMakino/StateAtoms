@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/MasatoMakino/StateAtoms#readme",
   "devDependencies": {
-    "@biomejs/biome": "2.1.4",
+    "@biomejs/biome": "2.2.0",
     "@masatomakino/release-helper": "^0.2.0",
     "@vitest/coverage-istanbul": "^3.0.1",
     "eventemitter3": "^5.0.1",
