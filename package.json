@@ -43,5 +43,9 @@
   "peerDependencies": {
     "eventemitter3": "^5.0.1",
     "fast-equals": "^5.0.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.43.0",
+    "@esbuild/linux-x64": "0.24.0"
   }
 }
