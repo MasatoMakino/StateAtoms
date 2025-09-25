@@ -1,18 +1,21 @@
 {
   "name": "StateAtoms Dev Container (Node 22)",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "remoteUser": "node",
-  "runArgs": [
-    "--cap-drop=ALL",
-    "--security-opt",
-    "no-new-privileges:true",
-    "--name=stateatoms-dev"
+  "runArgs": ["--cap-drop=ALL", "--name=stateatoms-dev"],
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
   ],
-  "postCreateCommand": "npm ci --ignore-scripts",
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "npm audit --audit-level=moderate || true",
   "containerEnv": {
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "NPM_CONFIG_AUDIT": "true"
   },
   "customizations": {
     "vscode": {
