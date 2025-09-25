@@ -19,7 +19,9 @@
     "build": "tsc",
     "preversion": "release-helper preversion",
     "postversion": "release-helper postversion",
-    "release": "release-helper release"
+    "release": "release-helper release",
+    "pre-commit": "npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "pre-push": "npm run build -- --noEmit && npx vitest --run && npx biome ci ."
   },
   "repository": {
     "type": "git",
@@ -37,7 +39,6 @@
     "@vitest/coverage-istanbul": "^3.0.1",
     "eventemitter3": "^5.0.1",
     "fast-equals": "^5.0.1",
-    "lefthook": "^1.12.2",
     "typescript": "^5.5.4"
   },
   "peerDependencies": {
@@ -45,7 +46,7 @@
     "fast-equals": "^5.0.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.43.0",
-    "@esbuild/linux-x64": "0.24.0"
+    "@esbuild/linux-x64": "0.24.0",
+    "@rollup/rollup-linux-x64-gnu": "4.43.0"
   }
 }

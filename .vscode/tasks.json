@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm test",
+      "group": "test",
+      "problemMatcher": [],
+      "label": "Dev Container: test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Run tests inside Dev Container via docker exec"
+    },
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm run build",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "Dev Container: build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Build project inside Dev Container via docker exec"
+    },
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm run coverage",
+      "group": "test",
+      "problemMatcher": [],
+      "label": "Dev Container: coverage",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Run test coverage inside Dev Container via docker exec"
+    },
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm run pre-commit",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "Dev Container: pre-commit",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Run pre-commit formatting inside Dev Container via docker exec"
+    },
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm run pre-push",
+      "group": "test",
+      "problemMatcher": [],
+      "label": "Dev Container: pre-push",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Run pre-push validation (build, test, biome ci) inside Dev Container via docker exec"
+    }
+  ]
+}
