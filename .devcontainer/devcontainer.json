@@ -1,0 +1,29 @@
+{
+  "name": "StateAtoms Dev Container (Node 22)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "remoteUser": "node",
+  "runArgs": ["--cap-drop=ALL", "--name=stateatoms-dev"],
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "npm audit --audit-level=moderate || true",
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "NPM_CONFIG_AUDIT": "true"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.vscode-typescript-next", "eamodio.gitlens"],
+      "settings": {
+        "typescript.preferences.includePackageJsonAutoImports": "off",
+        "editor.formatOnSave": false
+      }
+    }
+  }
+}
