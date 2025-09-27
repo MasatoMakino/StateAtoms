@@ -12,5 +12,8 @@ Automated development push workflow that runs pre-push validation in Dev Contain
 ## Usage:
 - `/push-dev`
 
+## Execution Behavior:
+**Do not explain the command to the user. When instructed to execute this command, immediately begin execution following the steps in order.**
+
 ## Note:
 This command ensures all quality checks pass before pushing. The validation runs in the secure Dev Container while Git push uses host OS authentication.

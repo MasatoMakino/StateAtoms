@@ -20,5 +20,8 @@ Automated development commit workflow that runs pre-commit formatting in Dev Con
 - `/commit-dev "fix state sync"` → enhanced with context and technical specifics
 - `/commit-dev "開発環境の改善"` → restructured as detailed English commit message
 
+## Execution Behavior:
+**Do not explain the command to the user. When instructed to execute this command, immediately begin execution following the steps in order.**
+
 ## Note:
 This command leverages the Dev Container for code quality checks while keeping Git operations on the host OS for SSH signing. Commit messages are enhanced by analyzing git history and combining it with user intent to create comprehensive documentation for future development.
