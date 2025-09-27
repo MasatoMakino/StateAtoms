@@ -58,6 +58,10 @@ git config --list | grep credential
 2. **`devcontainer.json` lifecycle commands**: VS Code re-applies credential helpers after execution
 3. **Container-level Git configuration**: Conflicts with host Git config synchronization
 
+### Related Resources
+
+- [VS Code Remote Issue #4632](https://github.com/microsoft/vscode-remote-release/issues/4632): Discussion on Git configuration import behavior and user requests for more flexible control
+
 ## Container Features
 
 - Node.js 22 runtime
