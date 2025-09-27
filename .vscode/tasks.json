@@ -1,5 +1,14 @@
 {
   "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "versionType",
+      "description": "Select version type to update",
+      "default": "patch",
+      "type": "pickString",
+      "options": ["patch", "minor", "major", "prerelease"]
+    }
+  ],
   "tasks": [
     {
       "type": "shell",
@@ -65,6 +74,19 @@
         "showReuseMessage": false
       },
       "detail": "Run pre-push validation (build, test, biome ci) inside Dev Container via docker exec"
+    },
+    {
+      "type": "shell",
+      "command": "docker exec -i -w /workspaces/StateAtoms stateatoms-dev npm version ${input:versionType} --no-git-tag-version --ignore-scripts",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "Dev Container: version (prompt)",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "showReuseMessage": false
+      },
+      "detail": "Update version in package.json and package-lock.json without Git commit/tag inside Dev Container (with user prompt)"
     }
   ]
 }
