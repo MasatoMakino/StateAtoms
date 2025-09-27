@@ -31,25 +31,27 @@ StateAtoms is a lightweight state management library for TypeScript that divides
 
 ## Development Commands
 
+All development commands should be executed via the development container. See **`.vscode/tasks.json`** for available tasks:
+
 ### Building
-```bash
-npm run build
-```
-Compiles TypeScript to ES modules in the `esm/` directory.
+- **Dev Container: build** - Compiles TypeScript to ES modules in the `esm/` directory
 
 ### Testing
-```bash
-npm test          # Run all tests
-npm run coverage  # Run tests with coverage report
-```
-Uses Vitest for testing with Istanbul coverage reporting.
+- **Dev Container: test** - Run all tests (175 tests)
+- **Dev Container: coverage** - Run tests with coverage report
 
 ### Code Quality
-```bash
-npx biome check   # Lint and format check
-npx biome format  # Format code
-```
+- **Dev Container: pre-commit** - Format code using Biome
+- **Dev Container: pre-push** - Full validation (build check, tests, Biome CI)
+
+### Version Management
+- **Dev Container: version (prompt)** - Interactive version bump (patch/minor/major/prerelease)
+
 Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
+
+### Version Release
+For complete version bump and release procedures, see:
+- **`.claude/docs/version-release-workflow.md`**: Comprehensive 11-step workflow guide covering version updates, quality checks, release branching, and signed tag creation.
 
 ## Technical Details
 
