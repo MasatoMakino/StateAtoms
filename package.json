@@ -17,9 +17,6 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "build": "tsc",
-    "preversion": "release-helper preversion",
-    "postversion": "release-helper postversion",
-    "release": "release-helper release",
     "pre-commit": "npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true .",
     "pre-push": "npm run build -- --noEmit && npx vitest --run && npx biome ci ."
   },
@@ -35,7 +32,6 @@
   "homepage": "https://github.com/MasatoMakino/StateAtoms#readme",
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
-    "@masatomakino/release-helper": "^0.2.0",
     "@vitest/coverage-istanbul": "^3.0.1",
     "eventemitter3": "^5.0.1",
     "fast-equals": "^5.0.1",
