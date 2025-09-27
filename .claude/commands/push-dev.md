@@ -7,7 +7,7 @@ Automated development push workflow that runs pre-push validation in Dev Contain
    - Build check (TypeScript compilation without emit)
    - Run all tests (175 tests)
    - Biome CI linting check
-2. Push to remote: `git push`
+2. Push to remote: `git push --set-upstream origin <branch-name>` (or `git push` if upstream exists)
 
 ## Usage:
 - `/push-dev`
