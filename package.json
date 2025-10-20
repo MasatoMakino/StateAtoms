@@ -42,7 +42,7 @@
     "fast-equals": "^5.0.1"
   },
   "optionalDependencies": {
-    "@esbuild/linux-x64": "0.25.5",
+    "@esbuild/linux-x64": "0.25.11",
     "@rollup/rollup-linux-x64-gnu": "4.43.0"
   }
 }
