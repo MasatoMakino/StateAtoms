@@ -16,14 +16,5 @@
   "containerEnv": {
     "NODE_ENV": "development",
     "NPM_CONFIG_AUDIT": "true"
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": ["ms-vscode.vscode-typescript-next", "eamodio.gitlens"],
-      "settings": {
-        "typescript.preferences.includePackageJsonAutoImports": "off",
-        "editor.formatOnSave": false
-      }
-    }
   }
 }
