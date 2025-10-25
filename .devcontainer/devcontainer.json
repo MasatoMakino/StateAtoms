@@ -9,7 +9,8 @@
   "remoteUser": "node",
   "runArgs": ["--cap-drop=ALL", "--name=stateatoms-dev"],
   "mounts": [
-    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=${localWorkspaceFolder}/.devcontainer,target=/workspaces/${localWorkspaceFolderBasename}/.devcontainer,type=bind,readonly"
   ],
   "postCreateCommand": "npm ci",
   "postStartCommand": "npm audit --audit-level=moderate || true",
