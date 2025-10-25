@@ -105,7 +105,7 @@ The protection is achieved using **nested mount shadowing**:
 4. Result: Project files are writable, but `.devcontainer/` is read-only
 
 **Mount hierarchy:**
-```
+```text
 /workspaces/StateAtoms/          (RW: true)  - project root
 ├── src/                          (RW: true)  - source files
 ├── .devcontainer/                (RW: false) - protected config
