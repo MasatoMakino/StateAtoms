@@ -31,7 +31,10 @@ StateAtoms is a lightweight state management library for TypeScript that divides
 
 ## Development Commands
 
-All development commands should be executed via the development container. See **`.vscode/tasks.json`** for available tasks:
+All development commands should be executed via the development container using devcontainer CLI. See **`.vscode/tasks.json`** for available tasks:
+
+### Container Management
+- **Dev Container: up** - Create and start the development container
 
 ### Building
 - **Dev Container: build** - Compiles TypeScript to ES modules in the `esm/` directory
@@ -47,7 +50,7 @@ All development commands should be executed via the development container. See *
 ### Version Management
 - **Dev Container: version (prompt)** - Interactive version bump (patch/minor/major/prerelease)
 
-Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
+All tasks use `devcontainer exec --workspace-folder .` for command execution. Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
 
 ### Version Release
 For complete version bump and release procedures, see:
