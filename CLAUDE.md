@@ -52,6 +52,96 @@ All development commands should be executed via the development container using 
 
 All tasks use `devcontainer exec --workspace-folder .` for command execution. Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
 
+### Git Hooks
+
+This project uses manual Git hooks integrated with the DevContainer environment for automated code quality checks.
+
+#### Why Manual Git Hooks?
+
+In the DevContainer isolation architecture:
+- **Git runs on the host OS** - All git operations (commit, push) execute on your machine
+- **npm runs in the container** - All npm scripts execute in the isolated container
+- **Husky is incompatible** - Husky requires npm to control Git hooks, which isn't possible across this boundary
+
+Therefore, Git hooks are manually installed to bridge the host Git and container npm environments.
+
+#### Automated Checks
+
+**pre-commit hook** (`.git/hooks/pre-commit`):
+- Automatically formats staged files using Biome
+- Runs before each commit
+- Starts DevContainer if not running
+
+**pre-push hook** (`.git/hooks/pre-push`):
+- Runs TypeScript build check (no emit)
+- Executes all tests via Vitest
+- Validates code with Biome CI
+- Runs before each push
+- Starts DevContainer if not running
+
+#### Setup Instructions for New Contributors
+
+Git hooks must be set up manually on each development machine:
+
+1. **Verify Git config is clean** (remove any Husky remnants):
+   ```bash
+   git config --unset core.hooksPath
+   ```
+
+2. **Create pre-commit hook**:
+   ```bash
+   cat > .git/hooks/pre-commit << 'EOF'
+   #!/bin/sh
+   exec 1>&2
+   echo "[pre-commit] Running code quality checks in DevContainer..."
+   if ! docker ps --format '{{.Names}}' | grep -q 'stateatoms-npm-runner'; then
+     echo "[pre-commit] DevContainer not running. Starting..."
+     devcontainer up --workspace-folder . || exit 1
+   fi
+   if ! devcontainer exec --workspace-folder . npm run pre-commit; then
+     echo "[pre-commit] ERROR: Code quality checks failed"
+     exit 1
+   fi
+   echo "[pre-commit] ✓ All checks passed"
+   exit 0
+   EOF
+   chmod +x .git/hooks/pre-commit
+   ```
+
+3. **Create pre-push hook**:
+   ```bash
+   cat > .git/hooks/pre-push << 'EOF'
+   #!/bin/sh
+   exec 1>&2
+   echo "[pre-push] Running tests and CI checks in DevContainer..."
+   if ! docker ps --format '{{.Names}}' | grep -q 'stateatoms-npm-runner'; then
+     echo "[pre-push] DevContainer not running. Starting..."
+     devcontainer up --workspace-folder . || exit 1
+   fi
+   if ! devcontainer exec --workspace-folder . npm run pre-push; then
+     echo "[pre-push] ERROR: Tests or CI checks failed"
+     exit 1
+   fi
+   echo "[pre-push] ✓ All checks passed"
+   exit 0
+   EOF
+   chmod +x .git/hooks/pre-push
+   ```
+
+4. **Verify hooks are working**:
+   ```bash
+   git commit --allow-empty -m "test: Verify hooks"
+   git reset --hard HEAD~1
+   ```
+
+#### Manual Alternative
+
+If you prefer not to use Git hooks, run these commands manually before committing:
+```bash
+devcontainer exec --workspace-folder . npm run pre-commit
+devcontainer exec --workspace-folder . npm run pre-push
+```
+
 ### Version Release
 For complete version bump and release procedures, see:
 - **`.claude/docs/version-release-workflow.md`**: Comprehensive 11-step workflow guide covering version updates, quality checks, release branching, and signed tag creation.

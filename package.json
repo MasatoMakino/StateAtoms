@@ -17,7 +17,7 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "build": "tsc",
-    "pre-commit": "npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "pre-commit": "npx biome format --write --staged --no-errors-on-unmatched --files-ignore-unknown=true",
     "pre-push": "npm run build -- --noEmit && npx vitest --run && npx biome ci ."
   },
   "repository": {
