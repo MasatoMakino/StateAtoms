@@ -71,72 +71,61 @@ git config --global credential.helper store
 
 **Note:** Container-level Git configuration is ephemeral and will be lost when the container is removed.
 
-## Configuration Directory Protection
+## Architecture
 
-### Purpose
+### Base Image
 
-The `.devcontainer` directory itself is mounted as **read-only** inside the container to prevent malicious npm scripts from escalating privileges by modifying container configuration files.
+Uses Microsoft's official DevContainer image:
+- **Image**: `mcr.microsoft.com/devcontainers/javascript-node:22`
+- Based on Debian with Node.js 22 pre-installed
+- Optimized for VS Code DevContainer compatibility
 
-### Security Risk Without Protection
+### Security Features
 
-A malicious npm package could:
-- Modify `devcontainer.json` to remove `--cap-drop=ALL` or other security restrictions
-- Alter `Dockerfile` to gain root access on next rebuild
-- Change mount configurations to access sensitive host directories
-- Bypass isolation by reconfiguring the container environment
+**Container Hardening:**
+- `--cap-drop=ALL`: Removes all Linux capabilities for defense in depth
+- `remoteUser: node`: Non-root user execution (UID:1000, GID:1000)
+- Isolated credentials: No automatic credential forwarding from host
 
-### Implementation Method
+**npm Execution Isolation:**
+- All npm commands execute exclusively in the container
+- Host OS npm is never used, protecting against malicious package scripts
+- Automatic `npm audit --audit-level=moderate` on container start
 
-The protection is achieved using **nested mount shadowing**:
+### node_modules Access Model
+
+**Current Approach:**
+- node_modules is stored on the host filesystem (no Docker volume)
+- Host OS can read node_modules for IDE type definition support
+- Enables IntelliSense, auto-completion, and type checking in host IDEs
+- npm installation and script execution remain isolated in the container
+
+**Security Trade-off:**
+- **Previous**: Complete isolation via Docker named volumes (higher security, no IDE support)
+- **Current**: npm execution isolated, node_modules accessible to host (balanced approach)
+- Primary security boundary is the containerized npm execution environment
+
+### Mount Configuration
 
 ```json
 {
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
-  "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer,target=/workspaces/${localWorkspaceFolderBasename}/.devcontainer,type=bind,readonly"
-  ]
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached"
 }
 ```
 
-**How it works:**
-1. `workspaceMount` mounts the entire project directory as read-write
-2. `mounts` array adds a nested readonly mount for the `.devcontainer` subdirectory
-3. The nested mount shadows (overrides) the parent mount's permissions for that subdirectory
-4. Result: Project files are writable, but `.devcontainer/` is read-only
-
 **Mount hierarchy:**
 ```text
-/workspaces/StateAtoms/          (RW: true)  - project root
-├── src/                          (RW: true)  - source files
-├── .devcontainer/                (RW: false) - protected config
-│   ├── devcontainer.json         (RW: false)
-│   ├── Dockerfile                (RW: false)
-│   └── README.md                 (RW: false)
-└── node_modules/                 (RW: true)  - volume mount
+/workspaces/StateAtoms/          (bind mount from host)
+├── src/                          (host files)
+├── .devcontainer/                (host files)
+├── node_modules/                 (host files, npm managed in container)
+└── package.json                  (host files)
 ```
-
-### Verification
-
-```bash
-# Attempt to create a file (should fail)
-devcontainer exec --workspace-folder . touch /workspaces/StateAtoms/.devcontainer/test.txt
-# Expected: touch: cannot touch '...': Read-only file system
-
-# Attempt to modify existing file (should fail)
-devcontainer exec --workspace-folder . sh -c 'echo "test" > /workspaces/StateAtoms/.devcontainer/devcontainer.json'
-# Expected: sh: 1: cannot create ...: Read-only file system
-
-# Check mount permissions
-devcontainer exec --workspace-folder . ls -la /workspaces/StateAtoms/.devcontainer
-# Expected: dr-xr-xr-x (note the lack of 'w' permissions)
-```
-
-**Technical Note:** This technique uses Linux kernel's mount behavior where a subdirectory can be mounted with different options than its parent. While Docker documentation primarily shows mounting the same source to different destinations, nested mount shadowing is a standard capability inherited from the Linux mount system.
 
 ## Container Features
 
-- Node.js 22 runtime
-- Volume-mounted node_modules for better performance
+- Node.js 22 runtime (Debian-based)
+- Microsoft DevContainer image for IDE compatibility
 - Security-hardened with dropped capabilities (`--cap-drop=ALL`)
 - Isolated credentials (no automatic forwarding from host)
-- Protected configuration directory (readonly mount)
+- Host-accessible node_modules for IDE type support

@@ -142,6 +142,37 @@ devcontainer exec --workspace-folder . npm run pre-commit
 devcontainer exec --workspace-folder . npm run pre-push
 ```
 
+### Container Architecture & Security
+
+#### Base Configuration
+- **Image**: `mcr.microsoft.com/devcontainers/javascript-node:22`
+- **User**: `node` (UID:1000, GID:1000) - non-root execution for security
+- **Security**: `--cap-drop=ALL` (removes all Linux capabilities)
+- **Port forwarding**: Not configured (library project, no server runtime)
+
+#### Security Model
+
+**npm Execution Isolation:**
+- All npm commands (`npm ci`, `npm test`, `npm run build`, etc.) execute exclusively in the container
+- Host OS npm is never used, protecting against malicious package scripts
+- Automatic `npm audit --audit-level=moderate` on container start
+
+**node_modules Access:**
+- Host OS can read node_modules for IDE type definition support
+- This enables IntelliSense, auto-completion, and type checking in host IDEs
+- npm installation and script execution remain isolated in the container
+
+**Security Trade-off:**
+- **Before**: Complete isolation of node_modules via Docker named volumes (higher security, no IDE type support)
+- **After**: npm execution isolated in container, node_modules accessible to host IDE (balanced approach prioritizing developer experience)
+- Primary security boundary is the containerized npm execution environment
+
+**Git Operations:**
+- Git operations cannot be performed in the container
+- While Git is installed, the container lacks authentication credentials and commit signing keys (GPG/SSH)
+- This is intentional: the container is designed exclusively for npm execution isolation
+- All Git operations (commit, push, etc.) must be performed on the host OS where credentials and keys are available
+
 ### Version Release
 For complete version bump and release procedures, see:
 - **`.claude/docs/version-release-workflow.md`**: Comprehensive 11-step workflow guide covering version updates, quality checks, release branching, and signed tag creation.
