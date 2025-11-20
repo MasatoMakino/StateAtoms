@@ -1,6 +1,6 @@
 {
   "name": "StateAtoms npm Runner (Node 22)",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "image": "node:22-slim",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "remoteUser": "node",
