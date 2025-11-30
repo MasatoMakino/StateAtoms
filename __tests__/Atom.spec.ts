@@ -99,7 +99,9 @@ describe("Atom - Core reactive primitive value management", () => {
       stringAtom.value = "hello";
       objectAtom.value = obj; // Same reference
 
-      spies.forEach((spy) => expect(spy).not.toHaveBeenCalled());
+      for (const spy of spies) {
+        expect(spy).not.toHaveBeenCalled();
+      }
     });
   });
 
