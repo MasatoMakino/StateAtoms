@@ -1,9 +1,6 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:22
+FROM node:22-bookworm-slim
 
-USER root
-
-# ボリュームマウントポイントを事前作成し、node所有に設定
-RUN mkdir -p /workspaces/StateAtoms/node_modules && \
-    chown -R node:node /workspaces/StateAtoms
-
-USER node
+# Install Git for Biome --staged option support
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
