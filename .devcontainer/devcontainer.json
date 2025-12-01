@@ -7,8 +7,7 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "remoteUser": "node",
   "runArgs": ["--cap-drop=ALL", "--name=stateatoms-npm-runner"],
-  "postCreateCommand": "npm ci",
-  "postStartCommand": "npm audit --audit-level=moderate || true",
+  "postCreateCommand": "npm audit --audit-level=moderate && npm ci && npm audit signatures",
   "containerEnv": {
     "NODE_ENV": "development",
     "NPM_CONFIG_AUDIT": "true"
