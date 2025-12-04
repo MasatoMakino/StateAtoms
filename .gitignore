@@ -138,6 +138,9 @@ temp-jsdoc-examples/
 # Local development notes and memos (not tracked in git)
 local-notes/
 
+# 1Password CLI plugin configuration (contains credential references)
+.op/
+
 # macOS system files
 .DS_Store
 .DS_Store?
