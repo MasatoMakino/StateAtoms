@@ -31,7 +31,60 @@ Confirm the following update scope with the user:
 
 ## Workflow Steps
 
-### Step 1: Switch to Default Branch
+### Step 1: Verify Tag Protection Rules
+
+First, identify the tag protection ruleset ID:
+
+```bash
+# List all rulesets and find the one for release tags
+gh api repos/MasatoMakino/StateAtoms/rulesets --jq '.[] | select(.name == "Release Tags") | {id, name, target}'
+
+# Expected output: Returns the ruleset ID (integer), name, and target type
+```
+
+Then check the ruleset status using the discovered ID:
+
+```bash
+# Store the ruleset ID for subsequent commands
+RULESET_ID=$(gh api repos/MasatoMakino/StateAtoms/rulesets --jq '.[] | select(.name == "Release Tags") | .id')
+
+gh api repos/MasatoMakino/StateAtoms/rulesets/${RULESET_ID} --jq '{
+  name,
+  enforcement,
+  rules: [.rules[].type],
+  bypass_actors_count: .bypass_actors | length,
+  current_user_can_bypass
+}'
+```
+
+**Expected output for maximum security:**
+```json
+{
+  "name": "Release Tags",
+  "enforcement": "active",
+  "rules": ["creation", "deletion", "non_fast_forward", "required_signatures", "update"],
+  "bypass_actors_count": 0,
+  "current_user_can_bypass": "never"
+}
+```
+
+**Action Required:**
+
+**Case 1: User has bypass capability** (`current_user_can_bypass` is NOT `"never"`):
+- Skip this step. You can create tags directly without modifying the ruleset.
+- Proceed to Step 2.
+
+**Case 2: User does NOT have bypass capability** (`current_user_can_bypass` is `"never"`):
+- If `rules` contains `"creation"`:
+  1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/settings/rules/${RULESET_ID}`
+  2. Temporarily remove **"creation"** rule from the ruleset (keep other rules active)
+  3. Confirm and wait for user to complete this step
+  4. Re-run the verification command to confirm `"creation"` is not in the rules array
+  5. **Important**: Remember to re-enable the creation rule in Step 10
+
+**Checkpoint**: Either you have bypass capability (skip), or the tag creation rule is temporarily removed (other protection rules remain active)
+
+### Step 2: Switch to Default Branch
 
 ```bash
 git checkout main
@@ -40,7 +93,7 @@ git pull origin main
 
 **Checkpoint**: Ensure you are on the latest main branch
 
-### Step 2: Update Dependencies
+### Step 3: Update Dependencies
 
 ```bash
 devcontainer exec --workspace-folder . npm ci
@@ -48,7 +101,7 @@ devcontainer exec --workspace-folder . npm ci
 
 **Checkpoint**: Dependencies are successfully installed
 
-### Step 3: Quality Checks
+### Step 4: Quality Checks
 
 ```bash
 # Lint check
@@ -63,7 +116,7 @@ devcontainer exec --workspace-folder . npm run build
 
 **Important**: If any step fails, abort the workflow and resolve the issues before continuing
 
-### Step 4: Version Bump Execution
+### Step 5: Version Bump Execution
 
 Execute according to the version update scope confirmed in Step 1:
 
@@ -80,7 +133,9 @@ devcontainer exec --workspace-folder . npm version major --no-git-tag-version --
 
 **Checkpoint**: Versions in package.json and package-lock.json are updated
 
-### Step 5: Create Version Branch and Tag
+### Step 6: Create Version Branch and Signed Tag
+
+**Prerequisites**: Verify that the "creation" rule was removed in Step 1, allowing tag creation.
 
 ```bash
 # Get the updated version number
@@ -101,7 +156,7 @@ git tag -s "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
 
 **Note**: The tag is created on the version branch before merging. This allows the tag to be included in the Pull Request.
 
-### Step 6: Push Version Branch and Tag
+### Step 7: Push Version Branch and Tag
 
 ```bash
 git push origin "version/v${NEW_VERSION}" "v${NEW_VERSION}"
@@ -109,7 +164,7 @@ git push origin "version/v${NEW_VERSION}" "v${NEW_VERSION}"
 
 **Important**: Push both the branch and the tag together. Due to repository tag creation restrictions, tags must be pushed with their associated branch in a Pull Request.
 
-### Step 7: Create Pull Request
+### Step 8: Create Pull Request
 
 Create PR using GitHub Web interface or GH CLI:
 
@@ -129,15 +184,51 @@ gh pr create \
 - Base branch: `main`
 - Branch naming: `version/v[version-number]` (historical convention)
 
-### Step 8: Wait for PR Merge
+### Step 9: Wait for PR Merge
 
 - Wait for CI/CD checks to complete
 - Wait for review completion if required
 - Merge the PR
 
-**Important**: When the PR is merged, both the version update commit and the tag will be merged into the main branch.
+**Checkpoint**: PR is merged, both the version update commit and the tag are now on the main branch
 
-### Step 9: Update Main Branch and Verify Tag
+### Step 10: Re-enable Tag Creation Protection
+
+**Note**: If your terminal session has restarted since Step 1, re-derive the `RULESET_ID` variable:
+
+```bash
+RULESET_ID=$(gh api repos/MasatoMakino/StateAtoms/rulesets --jq '.[] | select(.name == "Release Tags") | .id')
+echo "RULESET_ID: ${RULESET_ID}"
+```
+
+**Action Required:**
+
+**If you skipped Step 1 (had bypass capability)**:
+- Skip this step as well. No ruleset changes were made.
+- Proceed to Step 11.
+
+**If you removed the creation rule in Step 1**:
+1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/settings/rules/${RULESET_ID}`
+2. Add **"creation"** rule back to the ruleset
+3. Confirm the change
+
+Verify the creation rule is re-enabled:
+
+```bash
+# Use the same RULESET_ID from Step 1
+gh api repos/MasatoMakino/StateAtoms/rulesets/${RULESET_ID} --jq '.rules[].type' | grep creation
+# Expected output: "creation"
+```
+
+**Optional**: If you want to remove your bypass capability to enforce the creation rule:
+- Contact repository administrator to revoke bypass access
+- This ensures all future tags require proper authorization
+
+**Checkpoint**: Tag creation protection rule is re-enabled (if it was temporarily removed)
+
+**CRITICAL**: If you removed the creation rule in Step 1, do NOT skip re-enabling it. Leaving the creation rule disabled creates a security vulnerability.
+
+### Step 11: Update Main Branch and Verify
 
 ```bash
 git checkout main
@@ -150,28 +241,21 @@ git show "v${NEW_VERSION}"
 
 **Checkpoint**: Switched to the latest main branch after PR merge and verified tag exists
 
-### Step 10: Create GitHub Release
+### Step 12: Create GitHub Release (Manual - User Action)
 
-Create a GitHub Release from the merged tag:
+**User Action Required:**
 
-#### Method A: GitHub Web UI (Recommended)
+Create a GitHub Release via Web UI:
 
-1. Navigate to: https://github.com/MasatoMakino/StateAtoms/releases/new
-2. Select existing tag: `v${NEW_VERSION}` (e.g., `v0.2.2`)
-3. Title: `Release v${NEW_VERSION}`
-4. Description: `Release version ${NEW_VERSION}`
-5. Click "Publish release"
+1. Navigate to: <https://github.com/MasatoMakino/StateAtoms/tags>
+2. Find the new version tag `v${NEW_VERSION}` (e.g., `v0.2.2`)
+3. Click the **"..."** (three dots) button next to the tag
+4. Select **"Create release"** from the dropdown menu
+5. **Release title**: `Release v${NEW_VERSION}`
+6. **Describe this release**: `Release version ${NEW_VERSION}`
+7. Click **"Publish release"**
 
-#### Method B: GitHub CLI
-
-```bash
-NEW_VERSION=$(node -p "require('./package.json').version")
-gh release create "v${NEW_VERSION}" \
-  --title "Release v${NEW_VERSION}" \
-  --notes "Release version ${NEW_VERSION}"
-```
-
-**Checkpoint**: GitHub release is published using the merged tag
+**Checkpoint**: GitHub Release is published, triggering npm publish workflow via OIDC
 
 ## Post-Release Verification
 
