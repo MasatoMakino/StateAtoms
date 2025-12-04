@@ -188,6 +188,13 @@ gh pr create \
 
 ### Step 10: Re-enable Tag Creation Protection
 
+**Note**: If your terminal session has restarted since Step 1, re-derive the `RULESET_ID` variable:
+
+```bash
+RULESET_ID=$(gh api repos/MasatoMakino/StateAtoms/rulesets --jq '.[] | select(.name == "Release Tags") | .id')
+echo "RULESET_ID: ${RULESET_ID}"
+```
+
 **Action Required:**
 
 1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/rules/${RULESET_ID}`
@@ -225,11 +232,13 @@ git show "v${NEW_VERSION}"
 
 Create a GitHub Release via Web UI:
 
-1. Navigate to: https://github.com/MasatoMakino/StateAtoms/releases/new
-2. **Choose a tag**: Select existing tag `v${NEW_VERSION}` (e.g., `v0.2.2`)
-3. **Release title**: `Release v${NEW_VERSION}`
-4. **Describe this release**: `Release version ${NEW_VERSION}`
-5. Click **"Publish release"**
+1. Navigate to: <https://github.com/MasatoMakino/StateAtoms/tags>
+2. Find the new version tag `v${NEW_VERSION}` (e.g., `v0.2.2`)
+3. Click the **"..."** (three dots) button next to the tag
+4. Select **"Create release"** from the dropdown menu
+5. **Release title**: `Release v${NEW_VERSION}`
+6. **Describe this release**: `Release version ${NEW_VERSION}`
+7. Click **"Publish release"**
 
 **Checkpoint**: GitHub Release is published, triggering npm publish workflow via OIDC
 
