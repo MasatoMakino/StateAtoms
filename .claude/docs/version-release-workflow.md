@@ -70,13 +70,19 @@ gh api repos/MasatoMakino/StateAtoms/rulesets/${RULESET_ID} --jq '{
 
 **Action Required:**
 
-If `rules` contains `"creation"` AND `current_user_can_bypass` is `"never"`:
-1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/rules/${RULESET_ID}`
-2. Temporarily remove **"creation"** rule from the ruleset (keep other rules active)
-3. Confirm and wait for user to complete this step
-4. Re-run the verification command to confirm `"creation"` is not in the rules array
+**Case 1: User has bypass capability** (`current_user_can_bypass` is NOT `"never"`):
+- Skip this step. You can create tags directly without modifying the ruleset.
+- Proceed to Step 2.
 
-**Checkpoint**: Tag creation rule is temporarily removed, allowing tag creation for this release (other protection rules remain active)
+**Case 2: User does NOT have bypass capability** (`current_user_can_bypass` is `"never"`):
+- If `rules` contains `"creation"`:
+  1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/settings/rules/${RULESET_ID}`
+  2. Temporarily remove **"creation"** rule from the ruleset (keep other rules active)
+  3. Confirm and wait for user to complete this step
+  4. Re-run the verification command to confirm `"creation"` is not in the rules array
+  5. **Important**: Remember to re-enable the creation rule in Step 10
+
+**Checkpoint**: Either you have bypass capability (skip), or the tag creation rule is temporarily removed (other protection rules remain active)
 
 ### Step 2: Switch to Default Branch
 
@@ -197,7 +203,12 @@ echo "RULESET_ID: ${RULESET_ID}"
 
 **Action Required:**
 
-1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/rules/${RULESET_ID}`
+**If you skipped Step 1 (had bypass capability)**:
+- Skip this step as well. No ruleset changes were made.
+- Proceed to Step 11.
+
+**If you removed the creation rule in Step 1**:
+1. Navigate to: `https://github.com/MasatoMakino/StateAtoms/settings/rules/${RULESET_ID}`
 2. Add **"creation"** rule back to the ruleset
 3. Confirm the change
 
@@ -209,9 +220,13 @@ gh api repos/MasatoMakino/StateAtoms/rulesets/${RULESET_ID} --jq '.rules[].type'
 # Expected output: "creation"
 ```
 
-**Checkpoint**: Tag creation protection rule is re-enabled
+**Optional**: If you want to remove your bypass capability to enforce the creation rule:
+- Contact repository administrator to revoke bypass access
+- This ensures all future tags require proper authorization
 
-**CRITICAL**: Do NOT skip this step. Leaving the creation rule disabled creates a security vulnerability.
+**Checkpoint**: Tag creation protection rule is re-enabled (if it was temporarily removed)
+
+**CRITICAL**: If you removed the creation rule in Step 1, do NOT skip re-enabling it. Leaving the creation rule disabled creates a security vulnerability.
 
 ### Step 11: Update Main Branch and Verify
 
