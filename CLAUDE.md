@@ -67,12 +67,13 @@ Therefore, Git hooks are manually installed to bridge the host Git and container
 
 #### Automated Checks
 
-**pre-commit hook** (`.git/hooks/pre-commit`):
+**pre-commit hook**:
 - Automatically formats staged files using Biome
+- Re-stages formatted files to ensure changes are committed
 - Runs before each commit
 - Starts DevContainer if not running
 
-**pre-push hook** (`.git/hooks/pre-push`):
+**pre-push hook**:
 - Runs TypeScript build check (no emit)
 - Executes all tests via Vitest
 - Validates code with Biome CI
@@ -81,58 +82,30 @@ Therefore, Git hooks are manually installed to bridge the host Git and container
 
 #### Setup Instructions for New Contributors
 
-Git hooks must be set up manually on each development machine:
+Git hooks must be set up manually on each development machine. Sample hook scripts are provided in **`.devcontainer/sample-hooks/`**.
 
-1. **Verify Git config is clean** (remove any Husky remnants):
-   ```bash
-   git config --unset core.hooksPath
-   ```
+**Quick Setup**:
+```bash
+# Copy sample hooks to .git/hooks
+cp .devcontainer/sample-hooks/pre-commit .git/hooks/
+cp .devcontainer/sample-hooks/pre-push .git/hooks/
 
-2. **Create pre-commit hook**:
-   ```bash
-   cat > .git/hooks/pre-commit << 'EOF'
-   #!/bin/sh
-   exec 1>&2
-   echo "[pre-commit] Running code quality checks in DevContainer..."
-   if ! docker ps --format '{{.Names}}' | grep -q 'stateatoms-npm-runner'; then
-     echo "[pre-commit] DevContainer not running. Starting..."
-     devcontainer up --workspace-folder . || exit 1
-   fi
-   if ! devcontainer exec --workspace-folder . npm run pre-commit; then
-     echo "[pre-commit] ERROR: Code quality checks failed"
-     exit 1
-   fi
-   echo "[pre-commit] ✓ All checks passed"
-   exit 0
-   EOF
-   chmod +x .git/hooks/pre-commit
-   ```
+# Make hooks executable
+chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 
-3. **Create pre-push hook**:
-   ```bash
-   cat > .git/hooks/pre-push << 'EOF'
-   #!/bin/sh
-   exec 1>&2
-   echo "[pre-push] Running tests and CI checks in DevContainer..."
-   if ! docker ps --format '{{.Names}}' | grep -q 'stateatoms-npm-runner'; then
-     echo "[pre-push] DevContainer not running. Starting..."
-     devcontainer up --workspace-folder . || exit 1
-   fi
-   if ! devcontainer exec --workspace-folder . npm run pre-push; then
-     echo "[pre-push] ERROR: Tests or CI checks failed"
-     exit 1
-   fi
-   echo "[pre-push] ✓ All checks passed"
-   exit 0
-   EOF
-   chmod +x .git/hooks/pre-push
-   ```
+# Verify Git config is clean (remove any Husky remnants)
+git config --unset core.hooksPath
+```
 
-4. **Verify hooks are working**:
-   ```bash
-   git commit --allow-empty -m "test: Verify hooks"
-   git reset --hard HEAD~1
-   ```
+**Verify installation**:
+```bash
+# Test pre-commit hook
+git commit --allow-empty -m "test: Verify hooks"
+git reset --hard HEAD~1
+
+# Check hook files exist
+ls -la .git/hooks/pre-commit .git/hooks/pre-push
+```
 
 #### Manual Alternative
 
