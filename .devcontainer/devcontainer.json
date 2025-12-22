@@ -1,8 +1,6 @@
 {
   "name": "StateAtoms npm Runner (Node 22)",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "image": "node:22-bookworm-slim",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "remoteUser": "node",
