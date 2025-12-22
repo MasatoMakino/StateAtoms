@@ -29,56 +29,38 @@ This project has migrated from VS Code Dev Containers extension to devcontainer 
 - All tasks use `devcontainer exec` instead of `docker exec`
 - Credentials are isolated by default (no automatic forwarding)
 
-## Credential Isolation
+## Git Operations
+
+**Important:** Git is **not installed** in the DevContainer. All Git operations (commit, push, etc.) must be performed on the host OS.
+
+### Why Git is Not in the Container
+
+The container is designed exclusively for npm execution isolation:
+- **Host OS**: Handles all Git operations with your credentials and GPG/SSH keys
+- **Container**: Only runs npm commands (build, test, format)
+- **Benefits**: Simpler container (~80MB smaller), no credential management needed
 
 ### Verification
 
-The devcontainer CLI does **not** automatically forward credentials from the host to the container. You can verify this:
+You can verify that Git is not available in the container:
 
 ```bash
-# Git global config should not exist
-devcontainer exec --workspace-folder . git config --list --global
-# Expected: fatal: unable to read config file '/home/node/.gitconfig': No such file or directory
-
-# SSH auth socket should not be mounted
-devcontainer exec --workspace-folder . env | grep SSH_AUTH_SOCK
+# Git should not exist
+devcontainer exec --workspace-folder . which git
 # Expected: (no output)
 
-# Git credential helper should not exist
-devcontainer exec --workspace-folder . git config --list | grep credential
-# Expected: (no output)
-
-# GitHub environment variables should not exist
-devcontainer exec --workspace-folder . env | grep -E "(GH_|GITHUB_)"
-# Expected: No GitHub-related environment variables found
+devcontainer exec --workspace-folder . git --version
+# Expected: bash: git: command not found
 ```
-
-### Working with Git in the Container
-
-Since credentials are isolated, you must configure Git authentication inside the container if needed:
-
-```bash
-# Enter the container
-devcontainer exec --workspace-folder . /bin/bash
-
-# Configure Git inside the container
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-
-# For HTTPS authentication, use a personal access token
-git config --global credential.helper store
-```
-
-**Note:** Container-level Git configuration is ephemeral and will be lost when the container is removed.
 
 ## Architecture
 
 ### Base Image
 
-Uses Microsoft's official DevContainer image:
-- **Image**: `mcr.microsoft.com/devcontainers/javascript-node:22`
-- Based on Debian with Node.js 22 pre-installed
-- Optimized for VS Code DevContainer compatibility
+Uses official Node.js Docker image:
+- **Image**: `node:22-bookworm-slim`
+- Minimal Debian-based image with Node.js 22
+- No additional tools (Git, build tools) for smaller footprint
 
 ### Security Features
 
@@ -124,8 +106,13 @@ Uses Microsoft's official DevContainer image:
 
 ## Container Features
 
-- Node.js 22 runtime (Debian-based)
-- Microsoft DevContainer image for IDE compatibility
+- Node.js 22 runtime (minimal Debian-based image)
 - Security-hardened with dropped capabilities (`--cap-drop=ALL`)
-- Isolated credentials (no automatic forwarding from host)
+- No Git installation (all Git operations on host OS)
+- Isolated npm execution environment
 - Host-accessible node_modules for IDE type support
+
+## Configuration Files
+
+- **`devcontainer.json`**: Container configuration (image, security, lifecycle commands)
+- **`sample-hooks/`**: Git hook samples for bridging host Git and container npm

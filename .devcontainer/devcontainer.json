@@ -1,12 +1,13 @@
 {
   "name": "StateAtoms npm Runner (Node 22)",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "image": "node:22-bookworm-slim",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "remoteUser": "node",
-  "runArgs": ["--cap-drop=ALL", "--name=stateatoms-npm-runner"],
+  "runArgs": [
+    "--cap-drop=ALL",
+    "--name=${localWorkspaceFolderBasename}-npm-runner"
+  ],
   "postCreateCommand": "npm audit --audit-level=moderate && npm ci && npm audit signatures",
   "containerEnv": {
     "NODE_ENV": "development",
