@@ -42,10 +42,11 @@ chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 ### pre-commit hook
 
 1. Checks if DevContainer is running (starts if needed)
-2. Gets list of staged files
-3. Runs `npm run pre-commit` in DevContainer (Biome formatter with `--staged` flag)
-4. Re-stages formatted files to ensure changes are committed
-5. Handles file names with spaces correctly
+2. Gets list of staged files via `git diff --cached --name-only`
+3. Passes file paths to container: `npm run pre-commit -- $STAGED_FILES`
+4. Biome formats only the specified files (no Git required in container)
+5. Re-stages formatted files to ensure changes are committed
+6. Handles file names with spaces correctly via bash array expansion
 
 ### pre-push hook
 
@@ -126,14 +127,28 @@ This ensures hooks work correctly:
 - From any subdirectory within the repository
 - When repository is renamed or moved
 
+### File Path Argument Passing
+
+The pre-commit hook passes file paths explicitly to the container:
+
+1. **Host determines staged files**: `STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)`
+2. **Paths are repo-root-relative**: No path transformation needed
+3. **Pass to container**: `npm run pre-commit -- $STAGED_FILES`
+4. **Biome receives**: `biome format --write --no-errors-on-unmatched --files-ignore-unknown=true file1.ts file2.ts ...`
+
+**Benefits:**
+- Git not required in DevContainer (reduces image by ~80MB)
+- Single source of truth (host Git only)
+- Explicit file list (more transparent)
+
 ### Re-staging Logic (pre-commit)
 
 The pre-commit hook uses efficient re-staging:
 
 1. **Get staged files BEFORE npm run** (enables early return if no files staged)
-2. **Run formatter** in container with `--staged` flag
+2. **Run formatter** in container with explicit file paths
 3. **Re-stage each file** with proper handling:
-   - IFS (Internal Field Separator) preservation for file names with spaces
+   - Bash array expansion `"${ARRAY[@]}"` preserves file names with spaces
    - File existence check (`[ -f "$file" ]`) to skip deleted files
    - Error handling for each `git add` operation
 
