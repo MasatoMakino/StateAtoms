@@ -52,13 +52,6 @@ All development commands should be executed via the development container using 
 
 All tasks use `devcontainer exec --workspace-folder .` for command execution. Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
 
-### Code Quality
-
-- Uses Biome for formatting and linting (2-space indentation, double quotes, 80 char line width)
-- Manual Git hooks available (optional, see Git Hooks Setup section)
-- Pre-commit: Format staged files with Biome
-- Pre-push: Run TypeScript build check, tests, and Biome CI
-
 ## Git Hooks Setup (Optional)
 
 Git hooks can automatically run code quality checks before commits and pushes.
