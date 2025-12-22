@@ -52,68 +52,18 @@ All development commands should be executed via the development container using 
 
 All tasks use `devcontainer exec --workspace-folder .` for command execution. Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
 
-### Git Hooks
+### Code Quality
 
-This project uses manual Git hooks integrated with the DevContainer environment for automated code quality checks.
+- Uses Biome for formatting and linting (2-space indentation, double quotes, 80 char line width)
+- Manual Git hooks available (optional, see Git Hooks Setup section)
+- Pre-commit: Format staged files with Biome
+- Pre-push: Run TypeScript build check, tests, and Biome CI
 
-#### Why Manual Git Hooks?
+## Git Hooks Setup (Optional)
 
-In the DevContainer isolation architecture:
-- **Git runs on the host OS** - All git operations (commit, push) execute on your machine
-- **npm runs in the container** - All npm scripts execute in the isolated container
-- **Husky is incompatible** - Husky requires npm to control Git hooks, which isn't possible across this boundary
+Git hooks can automatically run code quality checks before commits and pushes.
 
-Therefore, Git hooks are manually installed to bridge the host Git and container npm environments.
-
-#### Automated Checks
-
-**pre-commit hook**:
-- Automatically formats staged files using Biome
-- Re-stages formatted files to ensure changes are committed
-- Runs before each commit
-- Starts DevContainer if not running
-
-**pre-push hook**:
-- Runs TypeScript build check (no emit)
-- Executes all tests via Vitest
-- Validates code with Biome CI
-- Runs before each push
-- Starts DevContainer if not running
-
-#### Setup Instructions for New Contributors
-
-Git hooks must be set up manually on each development machine. Sample hook scripts are provided in **`.devcontainer/sample-hooks/`**.
-
-**Quick Setup**:
-```bash
-# Copy sample hooks to .git/hooks
-cp .devcontainer/sample-hooks/pre-commit .git/hooks/
-cp .devcontainer/sample-hooks/pre-push .git/hooks/
-
-# Make hooks executable
-chmod +x .git/hooks/pre-commit .git/hooks/pre-push
-
-# Verify Git config is clean (remove any Husky remnants)
-git config --unset core.hooksPath
-```
-
-**Verify installation**:
-```bash
-# Test pre-commit hook
-git commit --allow-empty -m "test: Verify hooks"
-git reset --hard HEAD~1
-
-# Check hook files exist
-ls -la .git/hooks/pre-commit .git/hooks/pre-push
-```
-
-#### Manual Alternative
-
-If you prefer not to use Git hooks, run these commands manually before committing:
-```bash
-devcontainer exec --workspace-folder . npm run pre-commit
-devcontainer exec --workspace-folder . npm run pre-push
-```
+See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
 
 ### Container Architecture & Security
 
