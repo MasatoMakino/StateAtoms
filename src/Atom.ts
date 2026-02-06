@@ -112,7 +112,7 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * @since 0.1.0
  * @see {@link AtomContainer} for managing multiple atoms
  * @see {@link ObjectAtom} for objects requiring deep equality comparison
- * @see {@link .claude/skills/ui-integration-patterns/SKILL.md} for comprehensive UI integration examples
+ * @see `.claude/skills/ui-integration-patterns/SKILL.md` for comprehensive UI integration examples
  */
 export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   protected _value: T;
