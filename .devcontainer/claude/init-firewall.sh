@@ -20,7 +20,9 @@ if [ -n "$DOCKER_DNS_RULES" ]; then
     iptables -t nat -N DOCKER_OUTPUT 2>/dev/null || true
     iptables -t nat -N DOCKER_POSTROUTING 2>/dev/null || true
     echo "$DOCKER_DNS_RULES" | grep '^-A ' | while read -r rule; do
-        iptables -t nat $rule
+        # IFS=$'\n\t' prevents space-splitting; use array for correct arg passing
+        IFS=' ' read -ra args <<< "$rule"
+        iptables -t nat "${args[@]}"
     done
 else
     echo "No Docker DNS rules to restore"
