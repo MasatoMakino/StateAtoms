@@ -19,23 +19,32 @@ if [ -n "$DOCKER_DNS_RULES" ]; then
     echo "Restoring Docker DNS rules..."
     iptables -t nat -N DOCKER_OUTPUT 2>/dev/null || true
     iptables -t nat -N DOCKER_POSTROUTING 2>/dev/null || true
-    echo "$DOCKER_DNS_RULES" | xargs -L 1 iptables -t nat
+    echo "$DOCKER_DNS_RULES" | grep '^-A ' | while read -r rule; do
+        iptables -t nat $rule
+    done
 else
     echo "No Docker DNS rules to restore"
 fi
 
 # First allow DNS and localhost before any restrictions
-# Allow outbound DNS
-iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-# Allow inbound DNS responses
-iptables -A INPUT -p udp --sport 53 -j ACCEPT
-# Allow outbound SSH
+# Determine container DNS resolver
+DNS_SERVER=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)
+if [ -z "$DNS_SERVER" ]; then
+    echo "ERROR: Failed to detect DNS server"
+    exit 1
+fi
+echo "Using DNS server: $DNS_SERVER"
+# Allow outbound DNS to container's resolver only (prevents DNS tunneling)
+iptables -A OUTPUT -p udp -d "$DNS_SERVER" --dport 53 -j ACCEPT
+# Inbound DNS responses are covered by ESTABLISHED,RELATED rule
+# Allow outbound SSH (inbound responses covered by ESTABLISHED,RELATED)
 iptables -A OUTPUT -p tcp --dport 22 -j ACCEPT
-# Allow inbound SSH responses
-iptables -A INPUT -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
 # Allow localhost
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
+# Allow established connections early for performance and correctness
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # Create ipset with CIDR support
 ipset create allowed-domains hash:net
@@ -104,16 +113,12 @@ echo "Host network detected as: $HOST_NETWORK"
 iptables -A INPUT -s "$HOST_NETWORK" -j ACCEPT
 iptables -A OUTPUT -d "$HOST_NETWORK" -j ACCEPT
 
-# Set default policies to DROP first
+# Set default policies to DROP
 iptables -P INPUT DROP
 iptables -P FORWARD DROP
 iptables -P OUTPUT DROP
 
-# First allow established connections for already approved traffic
-iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-# Then allow only specific outbound traffic to allowed domains
+# Allow only specific outbound traffic to allowed domains
 iptables -A OUTPUT -m set --match-set allowed-domains dst -j ACCEPT
 
 # Explicitly REJECT all other outbound traffic for immediate feedback
