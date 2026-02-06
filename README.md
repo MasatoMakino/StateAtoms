@@ -185,7 +185,7 @@ console.log(container.count.value); // 2
 ```
 
 **Why Manual History?**
-Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see `guides/ui-integration-patterns.md`.
+Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see `.claude/skills/ui-integration-patterns/SKILL.md`.
 
 ### Advanced Configuration
 

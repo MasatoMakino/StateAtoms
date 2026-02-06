@@ -1,3 +1,8 @@
+---
+name: ui-integration-patterns
+description: UI integration patterns for StateAtoms history management. Use when implementing undo/redo with UI elements, binding atoms to inputs/sliders/selects, or designing history event timing.
+---
+
 # UI Integration Patterns for History Management
 
 This guide provides comprehensive examples for integrating StateAtoms with various UI elements while maintaining optimal history management for undo/redo operations.
@@ -50,10 +55,10 @@ let timeoutId: number;
 input.addEventListener('input', (e) => {
   // Update immediately for live search results
   searchAtom.value = e.target.value;
-  
+
   // Clear previous timeout
   clearTimeout(timeoutId);
-  
+
   // Save to history after user stops typing
   timeoutId = setTimeout(() => {
     searchAtom.emit('addHistory');
@@ -139,14 +144,14 @@ document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
   checkbox.addEventListener('change', (e) => {
     const value = e.target.value;
     const currentSelection = [...selectedItemsAtom.value];
-    
+
     if (e.target.checked) {
       currentSelection.push(value);
     } else {
       const index = currentSelection.indexOf(value);
       if (index > -1) currentSelection.splice(index, 1);
     }
-    
+
     selectedItemsAtom.value = currentSelection;
     selectedItemsAtom.emit('addHistory'); // Each selection is tracked
   });
@@ -163,7 +168,7 @@ document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     } else {
       tempSelection.delete(e.target.value);
     }
-    
+
     // Update atom for immediate UI reflection
     selectedItemsAtom.value = Array.from(tempSelection);
     // Note: No addHistory here - waiting for batch completion
@@ -254,7 +259,7 @@ dragContainer.addEventListener('dragover', (e) => {
 dragContainer.addEventListener('drop', (e) => {
   e.preventDefault();
   const newOrder = calculateNewOrder(e); // Your reordering logic
-  
+
   listOrderAtom.value = newOrder; // Update immediately
   listOrderAtom.emit('addHistory'); // Save completed reorder operation
 });
@@ -380,7 +385,7 @@ inputs.forEach((input, index) => {
   input.addEventListener('input', (e) => {
     sharedAtom.value = e.target.value;
   });
-  
+
   // Atom → All inputs (external updates, other input changes)
   sharedAtom.on('change', (args) => {
     // Update all inputs except the currently focused one
@@ -388,7 +393,7 @@ inputs.forEach((input, index) => {
       input.value = args.value;
     }
   });
-  
+
   // History from any input
   input.addEventListener('blur', () => {
     sharedAtom.emit('addHistory');
@@ -404,18 +409,18 @@ Establish team conventions for common UI patterns using utility functions:
 
 ```typescript
 // Team utility function for consistent text input handling with bidirectional binding
-function createTextInputBinding(atom: Atom<string>, input: HTMLInputElement, 
+function createTextInputBinding(atom: Atom<string>, input: HTMLInputElement,
                                mode: 'blur' | 'enter' | 'debounce' = 'blur') {
   // 1. User input → Atom (UI to State)
   input.addEventListener('input', (e) => {
     atom.value = e.target.value;
   });
-  
+
   // 2. Atom → UI (State to UI) - Handle external updates
   atom.on('change', (args) => {
     input.value = args.value;
   });
-  
+
   // 3. History management based on mode
   switch (mode) {
     case 'blur':
@@ -461,12 +466,12 @@ function createRangeBinding(atom: Atom<number>, range: HTMLInputElement) {
   range.addEventListener('input', (e) => {
     atom.value = parseInt(e.target.value);
   });
-  
+
   // Atom → UI (external updates)
   atom.on('change', (args) => {
     range.value = args.value.toString();
   });
-  
+
   // History on drag end
   range.addEventListener('change', () => {
     atom.emit('addHistory');
@@ -483,7 +488,7 @@ function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
     atom.value = e.target.value;
     atom.emit('addHistory'); // Immediate history for selections
   });
-  
+
   // Atom → UI (external updates)
   atom.on('change', (args) => {
     select.value = args.value;
@@ -504,11 +509,11 @@ function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
 test('slider creates history on change', () => {
   const atom = new Atom(0);
   const container = new AtomContainer({ useHistory: true });
-  
+
   // Simulate slider change
   atom.value = 50;
   atom.emit('addHistory');
-  
+
   // Verify history was created
   expect(container.canUndo()).toBe(true);
 });
@@ -542,16 +547,16 @@ input.addEventListener('blur', () => {
 ```typescript
 // Create a binding library for your application
 const UIBindings = {
-  textInput: (atom: Atom<string>, input: HTMLInputElement) => 
+  textInput: (atom: Atom<string>, input: HTMLInputElement) =>
     createTextInputBinding(atom, input, 'blur'),
-  
-  searchInput: (atom: Atom<string>, input: HTMLInputElement) => 
+
+  searchInput: (atom: Atom<string>, input: HTMLInputElement) =>
     createTextInputBinding(atom, input, 'debounce'),
-  
-  numberRange: (atom: Atom<number>, range: HTMLInputElement) => 
+
+  numberRange: (atom: Atom<number>, range: HTMLInputElement) =>
     createRangeBinding(atom, range),
-  
-  selection: (atom: Atom<string>, select: HTMLSelectElement) => 
+
+  selection: (atom: Atom<string>, select: HTMLSelectElement) =>
     createSelectBinding(atom, select),
 };
 
