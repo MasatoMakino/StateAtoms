@@ -106,7 +106,7 @@ export interface AtomEvents<T> {
    *
    * ### UI Integration Patterns
    * Different UI elements require different timing strategies for optimal user experience.
-   * See `guides/ui-integration-patterns.md` for comprehensive examples.
+   * See `.claude/skills/ui-integration-patterns/SKILL.md` for comprehensive examples.
    *
    * @example
    * ```typescript
