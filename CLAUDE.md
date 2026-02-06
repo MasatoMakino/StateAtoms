@@ -69,10 +69,6 @@ Git hooks can automatically run code quality checks before commits and pushes by
 
 See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
 
-### Version Release
-For complete version bump and release procedures, see:
-- **`.claude/docs/version-release-workflow.md`**: Comprehensive 11-step workflow guide covering version updates, quality checks, release branching, and signed tag creation.
-
 ## Technical Details
 
 ### Dependencies
