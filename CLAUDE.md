@@ -84,7 +84,7 @@ See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
 ### Architecture Notes
 - All atoms must call `connectMemberAtoms()` in AtomContainer constructors after adding member atoms
 - Event propagation flows upward through container hierarchy
-- Serialization skips atoms/containers with `isSkipSerialization: true`
+- Serialization skips atoms/containers with `skipSerialization: true`
 - History feature requires `useHistory: true` in container options
 
 ## Project Structure
