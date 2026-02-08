@@ -54,7 +54,7 @@ All tasks use `devcontainer exec --workspace-folder .` for command execution. Us
 
 ## Development Container
 
-### Quick Reference
+### npm Isolation Container
 
 - **Image**: `node:22-bookworm-slim` (minimal Node.js 22 image, no Git)
 - **npm Isolation**: All npm commands execute exclusively in the container
@@ -63,11 +63,22 @@ All tasks use `devcontainer exec --workspace-folder .` for command execution. Us
 For detailed container architecture, security model, and configuration, see:
 - **`.devcontainer/README.md`**: Complete DevContainer documentation
 
-### Git Hooks Setup (Optional)
+#### Git Hooks Setup (Optional)
 
 Git hooks can automatically run code quality checks before commits and pushes by bridging host Git and container npm.
 
 See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
+
+### Agent Container (Claude Code Sandbox)
+
+A separate DevContainer for autonomous Claude Code agents (e.g., conductor workers).
+
+- **Config**: `.devcontainer/claude/`
+- **Image**: `node:24` (full image with Git, gh CLI, git-delta)
+- **Git**: Available inside the container (unlike the development container)
+- **Includes**: Claude Code CLI, zsh, fzf, nano, vim, jq
+- **Network**: Firewall-restricted via `init-firewall.sh` (`NET_ADMIN` capability)
+- **Commands run directly** (no `devcontainer exec` needed from inside)
 
 ## Technical Details
 
