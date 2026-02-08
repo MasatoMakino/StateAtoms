@@ -71,7 +71,7 @@ See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
 
 ### Agent Container (Claude Code Sandbox)
 
-A separate DevContainer for autonomous Claude Code agents (e.g., conductor workers).
+A separate DevContainer for autonomous Claude Code agents (e.g., a conductor agent that orchestrates multiple worktrees in parallel).
 
 - **Config**: `.devcontainer/claude/`
 - **Image**: `node:24` (full image with Git, gh CLI, git-delta)
