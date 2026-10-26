@@ -12,7 +12,12 @@ import { InitValidationHelper } from "./utils/InitValidationHelper.js";
  */
 export type AtomContainerOptionsModern = {
   /**
-   * Whether to exclude this container from serialization operations.
+   * Whether to exclude this container from `toObject()` and `toJson()` output.
+   *
+   * A parent container restores this container through `fromObject()`,
+   * `fromJson()`, and `load()`, and records it in history for `undo()`
+   * and `redo()`. Use this for temporary state that the server does not need,
+   * such as screen transition state. This option is not a security feature.
    *
    * @default false
    */
@@ -185,19 +190,22 @@ export class AtomContainer<
   EventTypes extends AtomEvents<unknown> = AtomEvents<unknown>,
 > extends EventEmitter<EventTypes | AtomEvents<unknown>> {
   /**
-   * Determines whether this container should be excluded from serialization
-   * operations like toJson() and toObject().
+   * Determines whether a parent container excludes this container from
+   * `toObject()` and `toJson()` output. Restore and history include it.
    *
    * @default false
+   * @see {@link AtomContainerOptionsModern.skipSerialization}
    */
   readonly skipSerialization: boolean;
 
   /**
    * History array for undo/redo operations.
+   * Snapshots include members marked with skipSerialization, so their shape
+   * can differ from DataType.
    *
    * @private
    */
-  private _history: DataType[] = [];
+  private _history: Record<string, unknown>[] = [];
 
   /**
    * Current index in the history array.
@@ -440,7 +448,10 @@ export class AtomContainer<
    * Adds the current state to the history stack.
    * This method is called when addHistory events are emitted.
    *
-   * The snapshot holds references to atom values, not copies.
+   * The snapshot includes atoms and containers marked with skipSerialization,
+   * and it does not use toObject(). A subclass that overrides toObject()
+   * does not change the snapshot. The snapshot holds references to atom
+   * values, not copies.
    *
    * @example
    * ```typescript
@@ -456,8 +467,26 @@ export class AtomContainer<
     this.trackHistoryChange(() => {
       this._historyIndex++;
       this._history.splice(this._historyIndex);
-      this._history.push(this.toObject());
+      this._history.push(this.createHistorySnapshot());
     });
+  }
+
+  /**
+   * Copies the values of all member Atoms and AtomContainers, including
+   * those marked with skipSerialization, for the history stack.
+   *
+   * @private
+   */
+  private createHistorySnapshot(): Record<string, unknown> {
+    const obj = {} as Record<string, unknown>;
+    for (const [key, value] of Object.entries(this)) {
+      if (value instanceof AtomContainer) {
+        obj[key] = value.createHistorySnapshot();
+      } else if (value instanceof Atom) {
+        obj[key] = value.value;
+      }
+    }
+    return obj;
   }
 
   /**
@@ -522,6 +551,7 @@ export class AtomContainer<
   /**
    * Undoes the last change by restoring the previous state from history.
    * Does nothing when canUndo() returns false.
+   * The restore includes atoms and containers marked with skipSerialization.
    *
    * @example
    * ```typescript
@@ -536,13 +566,14 @@ export class AtomContainer<
 
     this.trackHistoryChange(() => {
       this._historyIndex--;
-      this.fromObject(this._history[this._historyIndex]);
+      this.restoreHistorySnapshot();
     });
   }
 
   /**
    * Redoes the last undone change by restoring the next state from history.
    * Does nothing when canRedo() returns false.
+   * The restore includes atoms and containers marked with skipSerialization.
    *
    * @example
    * ```typescript
@@ -557,13 +588,26 @@ export class AtomContainer<
 
     this.trackHistoryChange(() => {
       this._historyIndex++;
-      this.fromObject(this._history[this._historyIndex]);
+      this.restoreHistorySnapshot();
     });
+  }
+
+  /**
+   * Restores the history snapshot at the current history index.
+   *
+   * @private
+   */
+  private restoreHistorySnapshot() {
+    // Snapshots hold skipSerialization members outside DataType. fromObject
+    // restores every key that matches a member, so the cast loses no data.
+    // Restoring through fromObject keeps subclass overrides in effect.
+    this.fromObject(this._history[this._historyIndex] as DataType);
   }
 
   /**
    * Copies the values of all Atoms and AtomContainers held in this class to a plain object.
    * Atoms and containers marked with skipSerialization are excluded.
+   * History snapshots do not use this method.
    *
    * @returns A plain object containing the serialized state
    *
@@ -606,6 +650,8 @@ export class AtomContainer<
    * Only existing atoms and containers are updated; new properties are ignored.
    * Keys absent from obj leave their atoms unchanged, at every nesting level.
    * An atom, including ObjectAtom, receives the whole value for its key.
+   * Atoms and containers marked with skipSerialization are restored.
+   * Class fields that are not Atoms or AtomContainers are never written.
    *
    * @param obj - The object containing the state to restore
    *
@@ -653,6 +699,8 @@ export class AtomContainer<
    * If history tracking is enabled, clears the history and starts fresh.
    * Emits historyChange once when the history index or length differs from
    * the state before the call.
+   * Atoms and containers marked with skipSerialization are restored when obj
+   * contains their keys, and the first history entry records them.
    *
    * @param obj - The data to load
    *

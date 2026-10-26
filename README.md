@@ -225,33 +225,26 @@ Manual `addHistory` events allow applications to control when meaningful snapsho
 
 ### Advanced Configuration
 
+`skipSerialization` marks temporary state that the server does not need, such as screen transition state. A container treats these members as follows:
+
+- `toObject()` and `toJson()` exclude them.
+- `fromObject()`, `fromJson()`, and `load()` restore them, so the server can supply initial values.
+- History records them, and `undo()` and `redo()` restore them.
+
+`skipSerialization` is not a security feature.
+
 ```typescript
-// Skip serialization for different use cases
-const sessionToken = new Atom("secret-token", {
-  skipSerialization: true // Sensitive data
-});
-
-const currentModalState = new Atom("dialog-open", {
-  skipSerialization: true // Temporary UI state that resets on navigation
-});
-
-const loadingState = new Atom(false, {
-  skipSerialization: true // Runtime state not needed for backend sync
-});
-
-// Container with mixed serialization needs
 class AppContainerWithRuntimeState extends AtomContainer<{
   userSettings: { theme: string; language: string };
 }> {
-  // Persistent application data
+  // Sent to the server, restored, and undoable
   userSettings = new ObjectAtom({ theme: "light", language: "en" });
-  
-  // Temporary UI state (excluded from serialization/backend sync)
-  isMenuOpen = new Atom(false, { skipSerialization: true });
+
+  // Not sent to the server, but restored and undoable
   currentPage = new Atom("home", { skipSerialization: true });
-  
-  // Sensitive data (excluded from serialization)
-  authToken = new Atom("", { skipSerialization: true });
+
+  // Outside the container's scope: never serialized, restored, or recorded in history
+  authToken = "";
 
   constructor() {
     super({ useHistory: true });
@@ -259,6 +252,8 @@ class AppContainerWithRuntimeState extends AtomContainer<{
   }
 }
 ```
+
+Some values need none of serialization, restore, and history. Examples are credentials, loading flags, and UI state that undo must not change. These values are outside the container's scope. Hold them as plain fields or in your UI framework's state. A container reads and writes only its `Atom` and `AtomContainer` members, so `fromJson()` cannot overwrite a plain field.
 
 ## API Reference
 
@@ -268,7 +263,7 @@ Holds primitive values with change notifications.
 
 - `constructor(initialValue: T, options?)`: Create a new atom
 - `value: T`: Get/set the current value
-- `skipSerialization: boolean`: Whether to exclude from serialization (default: `false`)
+- `skipSerialization: boolean`: Whether a container excludes this atom from `toObject()` and `toJson()`. Restore and history include it (default: `false`)
 
 **Events:**
 - `change`: Emitted when value changes
