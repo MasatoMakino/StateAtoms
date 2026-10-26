@@ -4,7 +4,7 @@ import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
 /**
  * Test helper demonstrating selective serialization control.
- * Shows how isSkipSerialization flag excludes sensitive or temporary data from persistence.
+ * Uses the legacy isSkipSerialization flag to exclude members from toObject() output.
  */
 export class SkipAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
@@ -111,5 +111,75 @@ describe("AtomContainer.skip - Backwards compatibility", () => {
     const container = new SimpleAtomContainer({ isSkipSerialization: true });
     expect(container.skipSerialization).toBe(true);
     expect(container.isSkipSerialization).toBe(true);
+  });
+});
+
+/**
+ * Test helper for a child container that holds a skipSerialization atom.
+ */
+class PanelContainer extends AtomContainer<{ size: number }> {
+  readonly size = new Atom(1);
+  readonly activeTab = new Atom("general", { skipSerialization: true });
+  constructor() {
+    super();
+    this.connectMemberAtoms();
+  }
+}
+
+/**
+ * Test helper modeling an app container with temporary screen state.
+ * currentPage, overlay, and panel.activeTab are not sent to the server.
+ * authToken is a plain field outside the container's scope.
+ */
+class TransitionStateContainer extends AtomContainer<{
+  count: number;
+  panel: { size: number };
+}> {
+  readonly count = new Atom(0);
+  readonly currentPage = new Atom("home", { skipSerialization: true });
+  readonly overlay = new SimpleAtomContainer({ skipSerialization: true });
+  readonly panel = new PanelContainer();
+  authToken = "";
+  constructor() {
+    super({ useHistory: true });
+    this.connectMemberAtoms();
+  }
+}
+
+describe("AtomContainer.skip - Restore and history of skipSerialization members", () => {
+  it("accepts fromJson input for skipSerialization members so the server can supply initial values of temporary state", () => {
+    const container = new TransitionStateContainer();
+    container.fromJson('{"currentPage":"settings","overlay":{"atom1":10}}');
+    expect(container.currentPage.value).toBe("settings");
+    expect(container.overlay.atom1.value).toBe(10);
+  });
+
+  it("excludes skipSerialization atoms inside nested containers from toObject() output so the server receives no temporary state from any nesting level", () => {
+    const container = new TransitionStateContainer();
+    expect(container.toObject().panel).toEqual({ size: 1 });
+  });
+
+  it("restores skipSerialization members on undo and redo at every nesting level because excluding a value from the server is unrelated to history", () => {
+    const container = new TransitionStateContainer();
+    container.currentPage.value = "settings";
+    container.overlay.atom1.value = 10;
+    container.panel.activeTab.value = "advanced";
+    container.addHistory();
+
+    container.undo();
+    expect(container.currentPage.value).toBe("home");
+    expect(container.overlay.atom1.value).toBe(1);
+    expect(container.panel.activeTab.value).toBe("general");
+
+    container.redo();
+    expect(container.currentPage.value).toBe("settings");
+    expect(container.overlay.atom1.value).toBe(10);
+    expect(container.panel.activeTab.value).toBe("advanced");
+  });
+
+  it("never writes plain class fields from fromJson so values outside the container's scope cannot be injected from JSON", () => {
+    const container = new TransitionStateContainer();
+    container.fromJson('{"authToken":"injected"}');
+    expect(container.authToken).toBe("");
   });
 });
