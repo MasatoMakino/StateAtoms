@@ -191,6 +191,17 @@ container.redo();
 console.log(container.count.value); // 2
 ```
 
+`canUndo()` and `canRedo()` return whether `undo()` and `redo()` can move through history. The container emits `historyChange` after the history index or length changes, so UI can update its buttons there:
+
+```typescript
+container.on("historyChange", () => {
+  undoButton.disabled = !container.canUndo();
+  redoButton.disabled = !container.canRedo();
+});
+```
+
+Child containers do not propagate `historyChange` to their parent, because each container keeps its own history.
+
 **Why Manual History?**
 Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see [UI Integration Patterns for History Management](docs/ui-integration-patterns.md).
 
@@ -272,12 +283,15 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 - `load(obj)`: Load data and reset history
 - `undo()`: Undo last change (if history enabled)
 - `redo()`: Redo last undone change (if history enabled)
+- `canUndo()`: Whether `undo()` can restore a previous state
+- `canRedo()`: Whether `redo()` can restore a next state
 - `addHistory()`: Manually add current state to history
 
 **Events:**
 - `change`: Propagated from child atoms/containers (typed based on DataType)
 - `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
 - `addHistory`: Emitted when history entry is added
+- `historyChange`: Emitted after the history index or length changes. Not propagated to parent containers
 
 **Event Handling Examples:**
 ```typescript

@@ -214,6 +214,14 @@ export class AtomContainer<
   private _useHistory: boolean;
 
   /**
+   * Nesting depth of running history operations.
+   * Only the outermost operation emits historyChange.
+   *
+   * @private
+   */
+  private _historyOperationDepth = 0;
+
+  /**
    * Event listener function for beforeChange events.
    *
    * @private
@@ -443,14 +451,75 @@ export class AtomContainer<
       return;
     }
 
-    this._historyIndex++;
-    this._history.splice(this._historyIndex);
-    this._history.push(this.toObject());
+    this.trackHistoryChange(() => {
+      this._historyIndex++;
+      this._history.splice(this._historyIndex);
+      this._history.push(this.toObject());
+    });
+  }
+
+  /**
+   * Returns whether undo() can restore a previous state.
+   * The result is computed from the history position on each call.
+   *
+   * @returns `false` when history tracking is disabled or no previous state exists
+   *
+   * @example
+   * ```typescript
+   * undoButton.disabled = !container.canUndo();
+   * ```
+   *
+   * @since 0.2.3
+   */
+  public canUndo(): boolean {
+    return this._useHistory && this._historyIndex > 0;
+  }
+
+  /**
+   * Returns whether redo() can restore a next state.
+   * The result is computed from the history position on each call.
+   *
+   * @returns `false` when history tracking is disabled or no next state exists
+   *
+   * @example
+   * ```typescript
+   * redoButton.disabled = !container.canRedo();
+   * ```
+   *
+   * @since 0.2.3
+   */
+  public canRedo(): boolean {
+    return this._useHistory && this._historyIndex < this._history.length - 1;
+  }
+
+  /**
+   * Runs a history operation and emits historyChange once when the history
+   * index or the history length differs after the outermost operation.
+   *
+   * @private
+   */
+  private trackHistoryChange(operation: () => void) {
+    const index = this._historyIndex;
+    const length = this._history.length;
+    this._historyOperationDepth++;
+    try {
+      operation();
+    } finally {
+      // Restore the depth when a change listener throws, so later operations
+      // still emit historyChange. The exception propagates to the caller.
+      this._historyOperationDepth--;
+    }
+    if (
+      this._historyOperationDepth === 0 &&
+      (index !== this._historyIndex || length !== this._history.length)
+    ) {
+      this.emit("historyChange");
+    }
   }
 
   /**
    * Undoes the last change by restoring the previous state from history.
-   * Only works if history tracking is enabled.
+   * Does nothing when canUndo() returns false.
    *
    * @example
    * ```typescript
@@ -459,17 +528,19 @@ export class AtomContainer<
    */
   public undo() {
     this._initValidator.validateInitialized("undo");
-    if (!this._useHistory || this._historyIndex <= 0) {
+    if (!this.canUndo()) {
       return;
     }
 
-    this._historyIndex--;
-    this.fromObject(this._history[this._historyIndex]);
+    this.trackHistoryChange(() => {
+      this._historyIndex--;
+      this.fromObject(this._history[this._historyIndex]);
+    });
   }
 
   /**
    * Redoes the last undone change by restoring the next state from history.
-   * Only works if history tracking is enabled.
+   * Does nothing when canRedo() returns false.
    *
    * @example
    * ```typescript
@@ -478,12 +549,14 @@ export class AtomContainer<
    */
   public redo() {
     this._initValidator.validateInitialized("redo");
-    if (!this._useHistory || this._historyIndex >= this._history.length - 1) {
+    if (!this.canRedo()) {
       return;
     }
 
-    this._historyIndex++;
-    this.fromObject(this._history[this._historyIndex]);
+    this.trackHistoryChange(() => {
+      this._historyIndex++;
+      this.fromObject(this._history[this._historyIndex]);
+    });
   }
 
   /**
@@ -573,6 +646,8 @@ export class AtomContainer<
   /**
    * Loads data into the container.
    * If history tracking is enabled, clears the history and starts fresh.
+   * Emits historyChange once when the history index or length differs from
+   * the state before the call.
    *
    * @param obj - The data to load
    *
@@ -584,11 +659,13 @@ export class AtomContainer<
    */
   load(obj: DataType) {
     this._initValidator.validateInitialized("load");
-    if (this._useHistory) {
-      this._history = [];
-      this._historyIndex = -1;
-    }
-    this.fromObject(obj);
-    this.addHistory();
+    this.trackHistoryChange(() => {
+      if (this._useHistory) {
+        this._history = [];
+        this._historyIndex = -1;
+      }
+      this.fromObject(obj);
+      this.addHistory();
+    });
   }
 }
