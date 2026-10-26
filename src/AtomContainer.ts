@@ -222,6 +222,14 @@ export class AtomContainer<
   private _useHistory: boolean;
 
   /**
+   * Nesting depth of running history operations.
+   * Only the outermost operation emits historyChange.
+   *
+   * @private
+   */
+  private _historyOperationDepth = 0;
+
+  /**
    * Event listener function for beforeChange events.
    *
    * @private
@@ -442,7 +450,8 @@ export class AtomContainer<
    *
    * The snapshot includes atoms and containers marked with skipSerialization,
    * and it does not use toObject(). A subclass that overrides toObject()
-   * does not change the snapshot.
+   * does not change the snapshot. The snapshot holds references to atom
+   * values, not copies.
    *
    * @example
    * ```typescript
@@ -455,9 +464,11 @@ export class AtomContainer<
       return;
     }
 
-    this._historyIndex++;
-    this._history.splice(this._historyIndex);
-    this._history.push(this.createHistorySnapshot());
+    this.trackHistoryChange(() => {
+      this._historyIndex++;
+      this._history.splice(this._historyIndex);
+      this._history.push(this.createHistorySnapshot());
+    });
   }
 
   /**
@@ -479,8 +490,67 @@ export class AtomContainer<
   }
 
   /**
+   * Returns whether undo() can restore a previous state.
+   * The result is computed from the history position on each call.
+   *
+   * @returns `false` when history tracking is disabled or no previous state exists
+   *
+   * @example
+   * ```typescript
+   * undoButton.disabled = !container.canUndo();
+   * ```
+   *
+   * @since 0.2.3
+   */
+  public canUndo(): boolean {
+    return this._useHistory && this._historyIndex > 0;
+  }
+
+  /**
+   * Returns whether redo() can restore a next state.
+   * The result is computed from the history position on each call.
+   *
+   * @returns `false` when history tracking is disabled or no next state exists
+   *
+   * @example
+   * ```typescript
+   * redoButton.disabled = !container.canRedo();
+   * ```
+   *
+   * @since 0.2.3
+   */
+  public canRedo(): boolean {
+    return this._useHistory && this._historyIndex < this._history.length - 1;
+  }
+
+  /**
+   * Runs a history operation and emits historyChange once when the history
+   * index or the history length differs after the outermost operation.
+   *
+   * @private
+   */
+  private trackHistoryChange(operation: () => void) {
+    const index = this._historyIndex;
+    const length = this._history.length;
+    this._historyOperationDepth++;
+    try {
+      operation();
+    } finally {
+      // Restore the depth when a change listener throws, so later operations
+      // still emit historyChange. The exception propagates to the caller.
+      this._historyOperationDepth--;
+    }
+    if (
+      this._historyOperationDepth === 0 &&
+      (index !== this._historyIndex || length !== this._history.length)
+    ) {
+      this.emit("historyChange");
+    }
+  }
+
+  /**
    * Undoes the last change by restoring the previous state from history.
-   * Only works if history tracking is enabled.
+   * Does nothing when canUndo() returns false.
    * The restore includes atoms and containers marked with skipSerialization.
    *
    * @example
@@ -490,17 +560,19 @@ export class AtomContainer<
    */
   public undo() {
     this._initValidator.validateInitialized("undo");
-    if (!this._useHistory || this._historyIndex <= 0) {
+    if (!this.canUndo()) {
       return;
     }
 
-    this._historyIndex--;
-    this.restoreHistorySnapshot();
+    this.trackHistoryChange(() => {
+      this._historyIndex--;
+      this.restoreHistorySnapshot();
+    });
   }
 
   /**
    * Redoes the last undone change by restoring the next state from history.
-   * Only works if history tracking is enabled.
+   * Does nothing when canRedo() returns false.
    * The restore includes atoms and containers marked with skipSerialization.
    *
    * @example
@@ -510,12 +582,14 @@ export class AtomContainer<
    */
   public redo() {
     this._initValidator.validateInitialized("redo");
-    if (!this._useHistory || this._historyIndex >= this._history.length - 1) {
+    if (!this.canRedo()) {
       return;
     }
 
-    this._historyIndex++;
-    this.restoreHistorySnapshot();
+    this.trackHistoryChange(() => {
+      this._historyIndex++;
+      this.restoreHistorySnapshot();
+    });
   }
 
   /**
@@ -574,6 +648,8 @@ export class AtomContainer<
   /**
    * Restores the values of Atoms and AtomContainers from a plain object.
    * Only existing atoms and containers are updated; new properties are ignored.
+   * Keys absent from obj leave their atoms unchanged, at every nesting level.
+   * An atom, including ObjectAtom, receives the whole value for its key.
    * Atoms and containers marked with skipSerialization are restored.
    * Class fields that are not Atoms or AtomContainers are never written.
    *
@@ -598,6 +674,7 @@ export class AtomContainer<
 
   /**
    * Restores the values of Atoms and AtomContainers from a JSON string.
+   * Applies the same rules as fromObject() to the parsed object.
    *
    * @param json - The JSON string to parse and restore from
    *
@@ -620,6 +697,8 @@ export class AtomContainer<
   /**
    * Loads data into the container.
    * If history tracking is enabled, clears the history and starts fresh.
+   * Emits historyChange once when the history index or length differs from
+   * the state before the call.
    * Atoms and containers marked with skipSerialization are restored when obj
    * contains their keys, and the first history entry records them.
    *
@@ -633,11 +712,13 @@ export class AtomContainer<
    */
   load(obj: DataType) {
     this._initValidator.validateInitialized("load");
-    if (this._useHistory) {
-      this._history = [];
-      this._historyIndex = -1;
-    }
-    this.fromObject(obj);
-    this.addHistory();
+    this.trackHistoryChange(() => {
+      if (this._useHistory) {
+        this._history = [];
+        this._historyIndex = -1;
+      }
+      this.fromObject(obj);
+      this.addHistory();
+    });
   }
 }

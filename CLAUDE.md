@@ -95,7 +95,7 @@ A separate DevContainer for autonomous Claude Code agents (e.g., a conductor age
 ### Architecture Notes
 - All atoms must call `connectMemberAtoms()` in AtomContainer constructors after adding member atoms
 - Event propagation flows upward through container hierarchy
-- Serialization (`toObject`/`toJson`) skips atoms/containers with `skipSerialization: true`; restore (`fromObject`/`fromJson`/`load`) and history still include them
+- Serialization (`toObject`/`toJson`) skips atoms/containers with `skipSerialization: true`; restore (`fromObject`/`fromJson`/`load`) and history include them
 - History feature requires `useHistory: true` in container options
 
 ## Project Structure

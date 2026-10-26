@@ -84,6 +84,18 @@ userAtom.value = { name: "John", age: 30 };
 userAtom.value = { name: "Jane", age: 25 };
 ```
 
+`ObjectAtom` is for a value that changes as a whole, such as coordinates or a color. For data that changes field by field, nest containers whose leaf atoms hold primitive values.
+
+To change an object value in an `ObjectAtom` or an `Atom`, assign a new object. Treat the object that `value` returns as read-only:
+
+```typescript
+// Correct: assign a new object through the setter
+userAtom.value = { ...userAtom.value, name: "Bob" };
+
+// Wrong: the setter does not run, so no event fires and history snapshots change too
+userAtom.value.name = "Bob";
+```
+
 ### AtomContainer for State Management
 
 AtomContainer manages multiple atoms with automatic event propagation:
@@ -149,8 +161,12 @@ app.fromObject({
 });
 
 // fromJson also accepts JSON that contains only some of the keys.
-// Atoms whose keys are absent keep their current values.
+// Atoms whose keys are absent keep their current values, at every nesting level.
 app.fromJson('{"count":15}');
+
+// An ObjectAtom holds one value, so the object replaces the whole value:
+// user becomes { name: "Ann" }, without age.
+app.fromJson('{"user":{"name":"Ann"}}');
 ```
 
 ### History and Undo/Redo
@@ -190,6 +206,19 @@ console.log(container.count.value); // 1
 container.redo();
 console.log(container.count.value); // 2
 ```
+
+`canUndo()` and `canRedo()` return whether `undo()` and `redo()` can move through history. The container emits `historyChange` after the history index or length changes, so UI can update its buttons there:
+
+```typescript
+container.on("historyChange", () => {
+  undoButton.disabled = !container.canUndo();
+  redoButton.disabled = !container.canRedo();
+});
+```
+
+Child containers do not propagate `historyChange` to their parent, because each container keeps its own history.
+
+History snapshots hold references to atom values, so an in-place change to an object value also changes recorded history. See [ObjectAtom for Complex Data](#objectatom-for-complex-data).
 
 **Why Manual History?**
 Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see [UI Integration Patterns for History Management](docs/ui-integration-patterns.md).
@@ -267,12 +296,15 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 - `load(obj)`: Load data and reset history
 - `undo()`: Undo last change (if history enabled)
 - `redo()`: Redo last undone change (if history enabled)
+- `canUndo()`: Whether `undo()` can restore a previous state
+- `canRedo()`: Whether `redo()` can restore a next state
 - `addHistory()`: Manually add current state to history
 
 **Events:**
 - `change`: Propagated from child atoms/containers (typed based on DataType)
 - `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
 - `addHistory`: Emitted when history entry is added
+- `historyChange`: Emitted after the history index or length changes. Not propagated to parent containers
 
 **Event Handling Examples:**
 ```typescript

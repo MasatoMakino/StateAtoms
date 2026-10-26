@@ -138,6 +138,7 @@ const selectedItemsAtom = new Atom<string[]>([]);
 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
   checkbox.addEventListener('change', (e) => {
     const value = e.target.value;
+    // Copy the array. The atom and its history share the array that value returns.
     const currentSelection = [...selectedItemsAtom.value];
 
     if (e.target.checked) {
@@ -491,6 +492,48 @@ function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
 }
 ```
 
+### 5. Object Values
+
+An atom that holds an object or an array treats it as one value that changes as a whole. Pass values between the atom and the UI as primitives:
+
+- **Atom to UI**: Assign primitive fields of `atom.value` to UI properties.
+- **UI to atom**: Build a new object from UI properties and assign it to `atom.value` itself. Do not assign to fields of `atom.value`.
+
+Primitive assignments copy the value. The UI then never shares an object with the atom or its history, so `undo()` changes neither the history nor the UI state.
+
+```typescript
+const pointAtom = new ObjectAtom({ x: 0, y: 0 });
+
+// Atom to UI: copy primitive fields, including after undo() and redo()
+pointAtom.on("change", (args) => {
+  xInput.value = String(args.value.x);
+  yInput.value = String(args.value.y);
+});
+
+// UI to atom: assign a new object, then record history
+form.addEventListener("submit", () => {
+  pointAtom.value = { x: Number(xInput.value), y: Number(yInput.value) };
+  pointAtom.emit("addHistory");
+});
+```
+
+### 6. Undo and Redo Buttons
+
+Update button state in the `historyChange` listener of the container that owns the history. The container emits it after `addHistory()`, `undo()`, `redo()`, and `load()` change the history.
+
+```typescript
+const updateHistoryButtons = () => {
+  undoButton.disabled = !container.canUndo();
+  redoButton.disabled = !container.canRedo();
+};
+
+container.on("historyChange", updateHistoryButtons);
+updateHistoryButtons(); // Set the initial state
+
+undoButton.addEventListener("click", () => container.undo());
+redoButton.addEventListener("click", () => container.redo());
+```
+
 ## Common Pitfalls
 
 ### 1. Forgetting to Emit History Events
@@ -570,6 +613,21 @@ UIBindings.numberRange(volumeAtom, volumeSlider);
 UIBindings.selection(categoryAtom, categorySelect);
 
 // This eliminates human error and ensures team consistency
+```
+
+### 4. Changing an Atom Value in Place
+
+**Problem**: Code assigns to a field of the object that `atom.value` returns. No `change` event fires, and `undo()` cannot restore the old value.
+
+**Solution**: Assign a new object to `atom.value`. See [5. Object Values](#5-object-values).
+
+```typescript
+// ❌ Bad: changes the object that the atom and its history share
+userAtom.value.name = nameInput.value;
+
+// ✅ Good: assigns a new object through the setter
+userAtom.value = { ...userAtom.value, name: nameInput.value };
+userAtom.emit("addHistory");
 ```
 
 ---
