@@ -440,6 +440,8 @@ export class AtomContainer<
    * Adds the current state to the history stack.
    * This method is called when addHistory events are emitted.
    *
+   * The snapshot holds references to atom values, not copies.
+   *
    * @example
    * ```typescript
    * container.addHistory(); // Manually add current state to history
