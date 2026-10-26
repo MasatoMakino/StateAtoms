@@ -34,11 +34,11 @@
     "@biomejs/biome": "2.5.15",
     "@vitest/coverage-istanbul": "^5.0.2",
     "eventemitter3": "^5.0.1",
-    "fast-equals": "^5.0.1",
+    "fast-equals": "^6.0.4",
     "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "eventemitter3": "^5.0.1",
-    "fast-equals": "^5.0.1"
+    "fast-equals": "^6.0.4"
   }
 }
