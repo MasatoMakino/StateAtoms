@@ -127,4 +127,26 @@ export interface AtomEvents<T> {
    * ```
    */
   addHistory: () => void;
+
+  /**
+   * Emitted by an AtomContainer after its history index or history length
+   * changes. Atoms do not emit this event, and child containers do not
+   * propagate it to their parent.
+   *
+   * `addHistory()`, `undo()`, `redo()`, and `load()` emit this event at most
+   * once per call, after the container restores values. `connectMemberAtoms()`
+   * also emits it when it records the initial history entry. Call
+   * `canUndo()` and `canRedo()` in the listener to update UI state.
+   *
+   * @since 0.2.3
+   *
+   * @example
+   * ```typescript
+   * container.on("historyChange", () => {
+   *   undoButton.disabled = !container.canUndo();
+   *   redoButton.disabled = !container.canRedo();
+   * });
+   * ```
+   */
+  historyChange: () => void;
 }
