@@ -40,7 +40,7 @@ All development commands should be executed via the development container using 
 - **Dev Container: build** - Compiles TypeScript to ES modules in the `esm/` directory
 
 ### Testing
-- **Dev Container: test** - Run all tests (175 tests)
+- **Dev Container: test** - Run all tests
 - **Dev Container: coverage** - Run tests with coverage report
 
 ### Code Quality

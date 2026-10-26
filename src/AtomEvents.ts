@@ -106,7 +106,7 @@ export interface AtomEvents<T> {
    *
    * ### UI Integration Patterns
    * Different UI elements require different timing strategies for optimal user experience.
-   * See `.claude/skills/ui-integration-patterns/SKILL.md` for comprehensive examples.
+   * See {@link https://github.com/MasatoMakino/StateAtoms/blob/main/docs/ui-integration-patterns.md | UI Integration Patterns} for comprehensive examples.
    *
    * @example
    * ```typescript
