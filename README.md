@@ -142,7 +142,14 @@ console.log(stateJson); // '{"user":{"name":"Jane","age":25},"count":5,"settings
 const stateObj = app.toObject();
 
 // Restore from data
-app.fromObject({ count: 10, user: { name: "Bob", age: 40 } });
+app.fromObject({
+  user: { name: "Bob", age: 40 },
+  count: 10,
+  settings: { theme: "dark" },
+});
+
+// fromJson also accepts JSON that contains only some of the keys.
+// Atoms whose keys are absent keep their current values.
 app.fromJson('{"count":15}');
 ```
 
@@ -185,7 +192,7 @@ console.log(container.count.value); // 2
 ```
 
 **Why Manual History?**
-Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see `.claude/skills/ui-integration-patterns/SKILL.md`.
+Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see [UI Integration Patterns for History Management](docs/ui-integration-patterns.md).
 
 ### Advanced Configuration
 

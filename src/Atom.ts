@@ -90,7 +90,7 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * @example
  * ```typescript
  * // Create atom that won't be serialized
- * const tempAtom = new Atom("temp", { isSkipSerialization: true });
+ * const tempAtom = new Atom("temp", { skipSerialization: true });
  * ```
  *
  * @example
@@ -112,7 +112,7 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * @since 0.1.0
  * @see {@link AtomContainer} for managing multiple atoms
  * @see {@link ObjectAtom} for objects requiring deep equality comparison
- * @see `.claude/skills/ui-integration-patterns/SKILL.md` for comprehensive UI integration examples
+ * @see {@link https://github.com/MasatoMakino/StateAtoms/blob/main/docs/ui-integration-patterns.md | UI Integration Patterns} for comprehensive UI integration examples
  */
 export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   protected _value: T;
