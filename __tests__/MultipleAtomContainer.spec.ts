@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { Atom, AtomContainer } from "../src/index.js";
+import { Atom, AtomContainer, ObjectAtom } from "../src/index.js";
 import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
 /**
@@ -81,5 +81,30 @@ describe("MultipleAtomContainer - Nested container hierarchies and event propaga
     expect(atomContainer.atom2.value).toBe(31);
     expect(atomContainer.atomContainer.atom1.value).toBe(41);
     expect(atomContainer.atomContainer.atom2.value).toBe(51);
+  });
+});
+
+/**
+ * Test helper with a nested container and an ObjectAtom side by side.
+ */
+class RestoreGranularityContainer extends AtomContainer {
+  readonly count = new Atom(0);
+  readonly child = new SimpleAtomContainer();
+  readonly point = new ObjectAtom({ x: 1, y: 1 });
+  constructor() {
+    super();
+    this.connectMemberAtoms();
+  }
+}
+
+describe("MultipleAtomContainer - Restore granularity of partial input", () => {
+  it("updates only received keys of a nested container and replaces a whole ObjectAtom value, because a container is a set of atoms with a fixed structure and an ObjectAtom holds one value", () => {
+    const container = new RestoreGranularityContainer();
+    container.fromJson('{"child":{"atom1":9},"point":{"x":9}}');
+
+    expect(container.count.value).toBe(0);
+    expect(container.child.atom1.value).toBe(9);
+    expect(container.child.atom2.value).toBe(2);
+    expect(container.point.value).toEqual({ x: 9 });
   });
 });

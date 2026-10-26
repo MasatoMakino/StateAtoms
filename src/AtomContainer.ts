@@ -604,6 +604,8 @@ export class AtomContainer<
   /**
    * Restores the values of Atoms and AtomContainers from a plain object.
    * Only existing atoms and containers are updated; new properties are ignored.
+   * Keys absent from obj leave their atoms unchanged, at every nesting level.
+   * An atom, including ObjectAtom, receives the whole value for its key.
    *
    * @param obj - The object containing the state to restore
    *
@@ -626,6 +628,7 @@ export class AtomContainer<
 
   /**
    * Restores the values of Atoms and AtomContainers from a JSON string.
+   * Applies the same rules as fromObject() to the parsed object.
    *
    * @param json - The JSON string to parse and restore from
    *

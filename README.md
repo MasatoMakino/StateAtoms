@@ -161,8 +161,12 @@ app.fromObject({
 });
 
 // fromJson also accepts JSON that contains only some of the keys.
-// Atoms whose keys are absent keep their current values.
+// Atoms whose keys are absent keep their current values, at every nesting level.
 app.fromJson('{"count":15}');
+
+// An ObjectAtom holds one value, so the object replaces the whole value:
+// user becomes { name: "Ann" }, without age.
+app.fromJson('{"user":{"name":"Ann"}}');
 ```
 
 ### History and Undo/Redo
