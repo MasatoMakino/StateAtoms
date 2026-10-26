@@ -8,6 +8,8 @@ import { Atom } from "./Atom.js";
  * to determine if the object value has actually changed. This prevents unnecessary
  * event emissions when objects are structurally identical but not reference-equal.
  *
+ * ObjectAtom is for a value that changes as a whole. See {@link https://github.com/MasatoMakino/StateAtoms/blob/main/README.md#objectatom-for-complex-data | ObjectAtom for Complex Data}.
+ *
  * @template T - The type of object this atom holds
  *
  * @example

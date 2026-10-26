@@ -185,6 +185,9 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    * like numbers, strings, and booleans. For objects, dates, or complex types requiring
    * deep equality comparison, consider using ObjectAtom instead.
    *
+   * Writing to a field of the object that `value` returns does not run this
+   * setter: no event fires, and history snapshots that share the object change.
+   *
    * @param newValue - The new value to set
    *
    * @example

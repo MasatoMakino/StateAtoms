@@ -84,6 +84,18 @@ userAtom.value = { name: "John", age: 30 };
 userAtom.value = { name: "Jane", age: 25 };
 ```
 
+`ObjectAtom` is for a value that changes as a whole, such as coordinates or a color. For data that changes field by field, nest containers whose leaf atoms hold primitive values.
+
+To change an object value in an `ObjectAtom` or an `Atom`, assign a new object. Treat the object that `value` returns as read-only:
+
+```typescript
+// Correct: assign a new object through the setter
+userAtom.value = { ...userAtom.value, name: "Bob" };
+
+// Wrong: the setter does not run, so no event fires and history snapshots change too
+userAtom.value.name = "Bob";
+```
+
 ### AtomContainer for State Management
 
 AtomContainer manages multiple atoms with automatic event propagation:
@@ -201,6 +213,8 @@ container.on("historyChange", () => {
 ```
 
 Child containers do not propagate `historyChange` to their parent, because each container keeps its own history.
+
+History snapshots hold references to atom values, so an in-place change to an object value also changes recorded history. See [ObjectAtom for Complex Data](#objectatom-for-complex-data).
 
 **Why Manual History?**
 Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see [UI Integration Patterns for History Management](docs/ui-integration-patterns.md).
