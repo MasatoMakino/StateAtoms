@@ -9,7 +9,13 @@ import type { AtomEvents } from "./AtomEvents.js";
  */
 export type AtomOptionsModern = {
   /**
-   * Whether to exclude this atom from serialization operations.
+   * Whether to exclude this atom from `AtomContainer.toObject()` and
+   * `AtomContainer.toJson()` output.
+   *
+   * The container restores this atom through `fromObject()`,
+   * `fromJson()`, and `load()`, and records it in history for `undo()`
+   * and `redo()`. Use this for temporary state that the server does not need,
+   * such as screen transition state. This option is not a security feature.
    *
    * @default false
    */
@@ -89,8 +95,8 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  *
  * @example
  * ```typescript
- * // Create atom that won't be serialized
- * const tempAtom = new Atom("temp", { skipSerialization: true });
+ * // Screen transition state: not sent to the server, but restorable and undoable
+ * const currentPage = new Atom("home", { skipSerialization: true });
  * ```
  *
  * @example
@@ -118,10 +124,12 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   protected _value: T;
 
   /**
-   * Determines whether this atom should be excluded from serialization
-   * operations like AtomContainer.toJson() and toObject().
+   * Determines whether a container excludes this atom from
+   * AtomContainer.toObject() and toJson() output. Restore and history
+   * include it.
    *
    * @default false
+   * @see {@link AtomOptionsModern.skipSerialization}
    */
   readonly skipSerialization: boolean;
 
