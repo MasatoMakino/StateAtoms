@@ -649,6 +649,9 @@ export class AtomContainer<
    * Restores the values of Atoms and AtomContainers from a plain object.
    * Only existing atoms and containers are updated; new properties are ignored.
    * Keys absent from obj leave their atoms unchanged, at every nesting level.
+   * A key that holds undefined assigns undefined to its atom. The parameter
+   * type rejects that value for an atom whose type excludes undefined only
+   * when the caller's tsconfig enables exactOptionalPropertyTypes.
    * An atom, including ObjectAtom, receives the whole value for its key.
    * Atoms and containers marked with skipSerialization are restored.
    * Class fields that are not Atoms or AtomContainers are never written.
@@ -660,12 +663,12 @@ export class AtomContainer<
    * container.fromObject({ name: "Jane", age: 25 });
    * ```
    */
-  fromObject(obj: DataType): void {
+  fromObject(obj: Partial<DataType>): void {
     this._initValidator.validateInitialized("fromObject");
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const member = (this as Record<typeof key, unknown>)[key];
       if (member instanceof AtomContainer) {
-        member.fromObject(value);
+        member.fromObject(value as Record<string, unknown>);
       } else if (member instanceof Atom) {
         member.value = value;
       }
@@ -696,11 +699,11 @@ export class AtomContainer<
 
   /**
    * Loads data into the container.
+   * Applies the same rules as fromObject() to obj.
    * If history tracking is enabled, clears the history and starts fresh.
    * Emits historyChange once when the history index or length differs from
    * the state before the call.
-   * Atoms and containers marked with skipSerialization are restored when obj
-   * contains their keys, and the first history entry records them.
+   * The first history entry records skipSerialization members.
    *
    * @param obj - The data to load
    *
@@ -710,7 +713,7 @@ export class AtomContainer<
    * // History is cleared and new state becomes the first history entry
    * ```
    */
-  load(obj: DataType) {
+  load(obj: Partial<DataType>) {
     this._initValidator.validateInitialized("load");
     this.trackHistoryChange(() => {
       if (this._useHistory) {
