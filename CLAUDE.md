@@ -82,7 +82,7 @@ A separate DevContainer for autonomous Claude Code agents (e.g., a conductor age
 
 ## Technical Details
 
-### Dependencies
+### Peer Dependencies
 - **eventemitter3**: Event system for state change notifications
 - **fast-equals**: Deep equality comparison for ObjectAtom
 
