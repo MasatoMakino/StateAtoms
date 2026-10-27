@@ -84,7 +84,7 @@ export class InitValidationHelper {
    *
    * @example
    * ```typescript
-   * fromObject(obj: DataType): void {
+   * fromObject(obj: Partial<DataType>): void {
    *   this._initValidator.validateInitialized('fromObject');
    *   // ... rest of implementation
    * }

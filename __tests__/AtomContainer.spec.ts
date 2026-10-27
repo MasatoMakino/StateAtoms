@@ -71,6 +71,14 @@ describe("AtomContainer - Hierarchical state management with event propagation a
     expect(atomContainer.atom2.value).toBe(31);
   });
 
+  // Discard condition: rejecting undefined is left to the caller's compiler.
+  // Rebuild this test if the library takes that over.
+  it("fromObject assigns undefined from a present key, because rejecting undefined is left to the caller's compiler", () => {
+    const atomContainer = new SimpleAtomContainer();
+    atomContainer.fromObject({ atom1: undefined });
+    expect(atomContainer.atom1.value).toBeUndefined();
+  });
+
   it("should restore atom values from JSON string with fromJson()", () => {
     const atomContainer = new SimpleAtomContainer();
     atomContainer.fromJson('{"atom1":31,"atom2":42}');
@@ -176,12 +184,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       const container = new SimpleAtomContainer();
       const originalAtom2Value = container.atom2.value;
 
-      // Only provide data for atom1
-      // Testing partial data loading with missing properties
-      container.load({ atom1: 999 } as unknown as {
-        atom1: number;
-        atom2: number;
-      });
+      container.load({ atom1: 999 });
 
       expect(container.atom1.value).toBe(999);
       expect(container.atom2.value).toBe(originalAtom2Value); // Unchanged

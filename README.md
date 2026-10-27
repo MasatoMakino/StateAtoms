@@ -160,14 +160,18 @@ app.fromObject({
   settings: { theme: "dark" },
 });
 
-// fromJson also accepts JSON that contains only some of the keys.
+// fromObject, fromJson, and load accept data that contains only some of the keys.
 // Atoms whose keys are absent keep their current values, at every nesting level.
-app.fromJson('{"count":15}');
+app.fromObject({ count: 15 });
 
 // An ObjectAtom holds one value, so the object replaces the whole value:
 // user becomes { name: "Ann" }, without age.
 app.fromJson('{"user":{"name":"Ann"}}');
 ```
+
+A key that holds `undefined` assigns `undefined` to its atom. The parameter type of `fromObject()` rejects `{ count: undefined }` for `Atom<number>` only when your tsconfig enables `exactOptionalPropertyTypes`.
+
+The type check lets you omit top-level keys, not keys inside a nested container. To restore part of a nested container, call `fromObject()` on that container.
 
 ### History and Undo/Redo
 
