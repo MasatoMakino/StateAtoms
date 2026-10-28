@@ -534,6 +534,38 @@ undoButton.addEventListener("click", () => container.undo());
 redoButton.addEventListener("click", () => container.redo());
 ```
 
+### 7. Derived Values
+
+To show a value that depends on several atoms, keep the result outside atoms. A `change` listener calls a compute function and writes the result to UI state:
+
+- **Source atoms**: Hold the state that history records.
+- **Compute function**: Reads the current values of the source atoms and returns the derived value.
+- **Derived value**: Lives in UI state, such as a variable or the state of your UI framework. It is not an atom.
+
+```typescript
+class CartContainer extends AtomContainer<{ price: number; quantity: number }> {
+  price = new Atom(100);
+  quantity = new Atom(1);
+
+  constructor() {
+    super({ useHistory: true });
+    this.connectMemberAtoms();
+  }
+}
+const cart = new CartContainer();
+
+const computeTotal = () => cart.price.value * cart.quantity.value;
+
+// Recompute after every change, including undo() and redo()
+const updateTotal = () => {
+  totalLabel.textContent = String(computeTotal());
+};
+cart.on("change", updateTotal);
+updateTotal(); // Set the initial value
+```
+
+During `undo()` and `redo()`, the listener can run before the container restores every atom. The listener also runs for the last restored atom. The displayed value then matches the restored state.
+
 ## Common Pitfalls
 
 ### 1. Forgetting to Emit History Events
@@ -628,6 +660,24 @@ userAtom.value.name = nameInput.value;
 // ✅ Good: assigns a new object through the setter
 userAtom.value = { ...userAtom.value, name: nameInput.value };
 userAtom.emit("addHistory");
+```
+
+### 5. Writing an Atom from Another Atom's Listener
+
+**Problem**: A `change` listener of one atom assigns a value to another atom. When listeners connect atoms in both directions, a change can cycle through the listeners. During `undo()` and `redo()`, these writes also compete with the values that the container restores.
+
+**Solution**: Write listener results to UI state, not to atoms. To show a value that depends on several atoms, use a compute function. See [7. Derived Values](#7-derived-values).
+
+```typescript
+// ❌ Bad: a listener of one atom writes another atom
+cart.quantity.on("change", (args) => {
+  cart.total.value = cart.price.value * args.value;
+});
+
+// ✅ Good: the listener writes UI state that a compute function derives
+cart.on("change", () => {
+  totalLabel.textContent = String(computeTotal());
+});
 ```
 
 ---
