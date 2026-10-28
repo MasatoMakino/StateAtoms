@@ -650,13 +650,16 @@ export class AtomContainer<
    * Only existing atoms and containers are updated; new properties are ignored.
    * Keys absent from obj leave their atoms unchanged, at every nesting level.
    * A key that holds undefined assigns undefined to its atom. The parameter
-   * type rejects that value for an atom whose type excludes undefined only
-   * when the caller's tsconfig enables exactOptionalPropertyTypes.
+   * type rejects `undefined` for an atom or a nested container whose type
+   * excludes it only when your tsconfig enables `exactOptionalPropertyTypes`.
    * An atom, including ObjectAtom, receives the whole value for its key.
    * Atoms and containers marked with skipSerialization are restored.
    * Class fields that are not Atoms or AtomContainers are never written.
    *
    * @param obj - The object containing the state to restore
+   *
+   * @throws {TypeError} If a key of a nested container holds `undefined` or
+   * `null`
    *
    * @example
    * ```typescript
