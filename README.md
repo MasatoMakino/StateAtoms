@@ -232,6 +232,8 @@ Child containers do not propagate `historyChange` to their parent, because each 
 
 History snapshots hold references to atom values, so an in-place change to an object value also changes recorded history. See [ObjectAtom for Complex Data](#objectatom-for-complex-data).
 
+A snapshot records the atoms written since the last `addHistory()`, `undo()`, or `redo()` call. Its memory use and time grow with the number of written atoms. `undo()` and `redo()` set atom values directly and do not call `fromObject()`.
+
 **Why Manual History?**
 Manual `addHistory` events allow applications to control when meaningful snapshots are created, resulting in intuitive undo/redo behavior that matches user expectations. For comprehensive UI integration patterns, see [UI Integration Patterns for History Management](docs/ui-integration-patterns.md).
 
