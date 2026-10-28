@@ -724,4 +724,31 @@ export class AtomContainer<
       this.addHistory();
     });
   }
+
+  /**
+   * Disposes this container and its members at every nesting level to
+   * prevent memory leaks. Discard the container after `dispose()`.
+   *
+   * The container owns its members. `dispose()` calls `dispose()` on each
+   * member Atom and AtomContainer, including members marked with
+   * skipSerialization. Then it removes every listener on this container,
+   * including the listener of a parent container.
+   *
+   * A shared member loses the listeners of its other containers and UI code.
+   * This is the designed behavior.
+   *
+   * `dispose()` reaches only the members that the container holds when you
+   * call it. To replace a member atom, call `dispose()` on the old atom before
+   * the assignment. Otherwise the old atom keeps this container alive.
+   *
+   * @since 0.3.1
+   */
+  dispose(): void {
+    for (const value of Object.values(this)) {
+      if (value instanceof Atom || value instanceof AtomContainer) {
+        value.dispose();
+      }
+    }
+    this.removeAllListeners();
+  }
 }
