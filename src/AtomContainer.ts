@@ -26,9 +26,16 @@ export type AtomContainerOptionsModern = {
   /**
    * Whether to enable undo/redo functionality with manual history management.
    *
+   * To limit memory use, set `{ maxHistory }`. The container keeps at most
+   * `maxHistory` history snapshots, including the initial state. `true` sets
+   * no limit.
+   * When a new snapshot exceeds the limit, the container discards the oldest
+   * snapshot. The history index and length keep their values. In that case,
+   * the container does not emit `historyChange`.
+   *
    * @default false
    */
-  useHistory?: boolean;
+  useHistory?: boolean | { maxHistory: number };
 };
 
 /**
@@ -221,6 +228,8 @@ export class AtomContainer<
    */
   private _useHistory: boolean;
 
+  private _maxHistory: number;
+
   /**
    * Nesting depth of running history operations.
    * Only the outermost operation emits historyChange.
@@ -277,6 +286,9 @@ export class AtomContainer<
    * This validation helps catch common initialization issues during development.
    *
    * @param options - Configuration options
+   *
+   * @throws {RangeError} If `maxHistory` is not a positive integer or
+   * `Infinity`
    */
   constructor(options?: AtomContainerOptionsModern);
 
@@ -294,7 +306,18 @@ export class AtomContainer<
       (options as AtomContainerOptionsModern)?.skipSerialization ??
       (options as AtomContainerOptionsLegacy)?.isSkipSerialization ??
       false;
-    this._useHistory = options?.useHistory ?? false;
+    const useHistory = options?.useHistory ?? false;
+    this._useHistory = useHistory !== false;
+    this._maxHistory =
+      typeof useHistory === "object" ? useHistory.maxHistory : Infinity;
+    if (
+      this._maxHistory !== Infinity &&
+      !(Number.isInteger(this._maxHistory) && this._maxHistory >= 1)
+    ) {
+      throw new RangeError(
+        `maxHistory must be a positive integer or Infinity: ${this._maxHistory}`,
+      );
+    }
   }
 
   /**
@@ -452,6 +475,8 @@ export class AtomContainer<
    * and it does not use toObject(). A subclass that overrides toObject()
    * does not change the snapshot. The snapshot holds references to atom
    * values, not copies.
+   * When the history exceeds `maxHistory`, this method discards the oldest
+   * snapshot.
    *
    * @example
    * ```typescript
@@ -468,6 +493,10 @@ export class AtomContainer<
       this._historyIndex++;
       this._history.splice(this._historyIndex);
       this._history.push(this.createHistorySnapshot());
+      if (this._history.length > this._maxHistory) {
+        this._history.shift();
+        this._historyIndex--;
+      }
     });
   }
 
