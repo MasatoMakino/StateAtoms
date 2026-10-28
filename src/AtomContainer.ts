@@ -5,6 +5,12 @@ import type { AtomEvents } from "./AtomEvents.js";
 import { InitValidationHelper } from "./utils/InitValidationHelper.js";
 
 /**
+ * Changes from one history state to the next, as flat
+ * `atom, valueFrom, value` triples to keep memory per entry small.
+ */
+type HistoryEntry = readonly unknown[];
+
+/**
  * Modern configuration options for AtomContainer instances.
  * This is the preferred API that uses consistent naming conventions.
  *
@@ -183,6 +189,11 @@ export type AtomContainerOptions =
  * }
  * ```
  *
+ * **Public Methods Are Not Extension Points**
+ * Public methods such as `fromObject()` are operations for callers. Do not
+ * override them to change their behavior. To normalize input, normalize it
+ * before you call the method.
+ *
  * **Developer Experience Enhancement (v0.1.5+)**
  * AtomContainer includes automatic validation that warns developers when operations
  * are called before proper initialization. This provides helpful developer feedback
@@ -207,12 +218,20 @@ export class AtomContainer<
 
   /**
    * History array for undo/redo operations.
-   * Snapshots include members marked with skipSerialization, so their shape
-   * can differ from DataType.
+   * Entry i holds the changes from history state i - 1 to state i. Entry 0
+   * is never read, because undo cannot move before state 0. addHistory()
+   * empties it to release references after the oldest entry is discarded.
    *
    * @private
    */
-  private _history: Record<string, unknown>[] = [];
+  private _history: HistoryEntry[] = [];
+
+  /**
+   * Values at the current history state of the atoms written since then.
+   *
+   * @private
+   */
+  private _pendingChanges = new Map<Atom<unknown>, unknown>();
 
   /**
    * Current index in the history array.
@@ -244,6 +263,11 @@ export class AtomContainer<
    * @private
    */
   private _beforeChangeListener = (arg: AtomEventArgs<unknown>) => {
+    // Record before the write, so a listener that throws or writes again
+    // cannot hide a change from history.
+    if (this._useHistory && !this._pendingChanges.has(arg.from)) {
+      this._pendingChanges.set(arg.from, arg.valueFrom);
+    }
     this.emit("beforeChange", arg);
   };
 
@@ -471,10 +495,12 @@ export class AtomContainer<
    * Adds the current state to the history stack.
    * This method is called when addHistory events are emitted.
    *
-   * The snapshot includes atoms and containers marked with skipSerialization,
-   * and it does not use toObject(). A subclass that overrides toObject()
-   * does not change the snapshot. The snapshot holds references to atom
-   * values, not copies.
+   * The snapshot records the atoms written since the last `addHistory()`,
+   * `undo()`, or `redo()` call, including members marked with
+   * skipSerialization at every nesting level. Its memory use and time grow
+   * with the number of written atoms, not with the number of members. A call
+   * without changes still adds a snapshot. The snapshot holds references to
+   * atom values, not copies.
    * When the history exceeds `maxHistory`, this method discards the oldest
    * snapshot.
    *
@@ -492,30 +518,20 @@ export class AtomContainer<
     this.trackHistoryChange(() => {
       this._historyIndex++;
       this._history.splice(this._historyIndex);
-      this._history.push(this.createHistorySnapshot());
+      const changes: unknown[] = [];
+      for (const [atom, valueFrom] of this._pendingChanges) {
+        if (atom.value !== valueFrom) {
+          changes.push(atom, valueFrom, atom.value);
+        }
+      }
+      this._history.push(changes);
+      this._pendingChanges = new Map();
       if (this._history.length > this._maxHistory) {
         this._history.shift();
         this._historyIndex--;
       }
+      this._history[0] = [];
     });
-  }
-
-  /**
-   * Copies the values of all member Atoms and AtomContainers, including
-   * those marked with skipSerialization, for the history stack.
-   *
-   * @private
-   */
-  private createHistorySnapshot(): Record<string, unknown> {
-    const obj = {} as Record<string, unknown>;
-    for (const [key, value] of Object.entries(this)) {
-      if (value instanceof AtomContainer) {
-        obj[key] = value.createHistorySnapshot();
-      } else if (value instanceof Atom) {
-        obj[key] = value.value;
-      }
-    }
-    return obj;
   }
 
   /**
@@ -580,7 +596,10 @@ export class AtomContainer<
   /**
    * Undoes the last change by restoring the previous state from history.
    * Does nothing when canUndo() returns false.
+   * It also reverts changes that addHistory() has not recorded.
    * The restore includes atoms and containers marked with skipSerialization.
+   * It sets atom values directly and does not call fromObject(). Each
+   * restored atom emits at most one `change`.
    *
    * @example
    * ```typescript
@@ -594,15 +613,19 @@ export class AtomContainer<
     }
 
     this.trackHistoryChange(() => {
+      const changes = this._history[this._historyIndex];
       this._historyIndex--;
-      this.restoreHistorySnapshot();
+      this.restoreHistory(changes, "valueFrom");
     });
   }
 
   /**
    * Redoes the last undone change by restoring the next state from history.
    * Does nothing when canRedo() returns false.
+   * It also reverts changes that addHistory() has not recorded.
    * The restore includes atoms and containers marked with skipSerialization.
+   * It sets atom values directly and does not call fromObject(). Each
+   * restored atom emits at most one `change`.
    *
    * @example
    * ```typescript
@@ -617,20 +640,30 @@ export class AtomContainer<
 
     this.trackHistoryChange(() => {
       this._historyIndex++;
-      this.restoreHistorySnapshot();
+      this.restoreHistory(this._history[this._historyIndex], "value");
     });
   }
 
   /**
-   * Restores the history snapshot at the current history index.
+   * Reverts the pending changes, then applies one history entry.
    *
+   * @param changes - The history entry to apply
+   * @param side - `valueFrom` to undo the entry, `value` to redo it
    * @private
    */
-  private restoreHistorySnapshot() {
-    // Snapshots hold skipSerialization members outside DataType. fromObject
-    // restores every key that matches a member, so the cast loses no data.
-    // Restoring through fromObject keeps subclass overrides in effect.
-    this.fromObject(this._history[this._historyIndex] as DataType);
+  private restoreHistory(changes: HistoryEntry, side: "valueFrom" | "value") {
+    // Merge into one target per atom, so each atom emits at most one change.
+    const targets = new Map(this._pendingChanges);
+    const offset = side === "valueFrom" ? 1 : 2;
+    for (let i = 0; i < changes.length; i += 3) {
+      targets.set(changes[i] as Atom<unknown>, changes[i + offset]);
+    }
+    // Targets are the values at the new history state. Seeding them keeps
+    // atoms that a throwing listener leaves unwritten in the pending changes.
+    this._pendingChanges = new Map(targets);
+    for (const [atom, value] of targets) {
+      atom.value = value;
+    }
   }
 
   /**
@@ -735,7 +768,6 @@ export class AtomContainer<
    * If history tracking is enabled, clears the history and starts fresh.
    * Emits historyChange once when the history index or length differs from
    * the state before the call.
-   * The first history entry records skipSerialization members.
    *
    * @param obj - The data to load
    *
