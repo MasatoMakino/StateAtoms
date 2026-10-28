@@ -261,7 +261,7 @@ Some values need none of serialization, restore, and history. Examples are crede
 
 ### Disposing State
 
-`dispose()` prevents memory leaks. A container adds listeners to its member atoms, so a member atom keeps a reference to the container. When you discard state, call `dispose()` on the root container so that the garbage collector can free the whole tree.
+`dispose()` prevents memory leaks. A container adds listeners to its member atoms, so a member atom references the container. If code outside the container still references a member atom, that atom keeps the container alive. When you discard state, call `dispose()` on the root container.
 
 A container owns its members. `dispose()` on a container does the following:
 
@@ -278,9 +278,9 @@ state.dispose();
 
 `dispose()` destroys sharing. A shared atom or container loses the listeners of its other containers and UI code. This is the designed behavior. After `dispose()`, discard the container and its members.
 
-#### Replacing a member atom
+#### Replacing a Member Atom
 
-A container does not support replacing a member atom with another atom instance. To change state, assign a new value to the existing atom. `dispose()` reaches only the members that the container holds when you call it. A replaced atom keeps the listeners of the container and keeps the container alive.
+A container does not support replacing a member atom with another atom instance. To change state, assign a new value to the existing atom. `dispose()` reaches only the members that the container holds when you call it. If other code still references a replaced atom, the atom keeps the container alive.
 
 If you must replace a member atom, dispose the old atom yourself before the assignment. Then call `connectMemberAtoms()` to connect the new atom.
 
@@ -339,7 +339,7 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 - `canUndo()`: Whether `undo()` can restore a previous state
 - `canRedo()`: Whether `redo()` can restore a next state
 - `addHistory()`: Manually add current state to history
-- `dispose()`: Dispose this container and all nested members to prevent memory leaks. See [Disposing State](#disposing-state)
+- `dispose()`: Dispose this container and all nested members to prevent memory leaks. For more information, see [Disposing State](#disposing-state).
 
 **Events:**
 - `change`: Propagated from child atoms/containers (typed based on DataType)

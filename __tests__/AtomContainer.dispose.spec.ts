@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
 
-const atomEvents = ["beforeChange", "change", "addHistory"] as const;
-
-const countListeners = (emitter: Atom<unknown> | AtomContainer) =>
-  atomEvents.reduce((sum, event) => sum + emitter.listenerCount(event), 0);
-
 class ChildContainer extends AtomContainer {
   readonly count: Atom<number>;
   readonly hidden = new Atom("tmp", { skipSerialization: true });
@@ -36,7 +31,7 @@ describe("Atom.dispose", () => {
     atom.value = 1;
 
     expect(spy).not.toHaveBeenCalled();
-    expect(countListeners(atom)).toBe(0);
+    expect(atom.eventNames()).toEqual([]);
   });
 });
 
@@ -46,21 +41,19 @@ describe("AtomContainer.dispose", () => {
 
     parent.dispose();
 
-    expect(countListeners(parent.name)).toBe(0);
-    expect(countListeners(parent.child)).toBe(0);
-    expect(countListeners(parent.child.count)).toBe(0);
-    expect(countListeners(parent.child.hidden)).toBe(0);
+    expect(parent.name.eventNames()).toEqual([]);
+    expect(parent.child.eventNames()).toEqual([]);
+    expect(parent.child.count.eventNames()).toEqual([]);
+    expect(parent.child.hidden.eventNames()).toEqual([]);
   });
 
   it("removes the subscribers of the container so that disposed state stops notifying them", () => {
     const parent = new ParentContainer();
-    const parentSpy = vi.fn();
-    parent.on("change", parentSpy);
+    parent.on("change", vi.fn());
 
     parent.dispose();
-    parent.name.value = "Jane";
 
-    expect(parentSpy).not.toHaveBeenCalled();
+    expect(parent.eventNames()).toEqual([]);
   });
 
   // Discard condition: design decision by the repository maintainer (2026-10-28).
