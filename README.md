@@ -220,6 +220,14 @@ container.on("historyChange", () => {
 });
 ```
 
+To limit memory use, set `useHistory` to `{ maxHistory }`. The container keeps at most `maxHistory` snapshots, including the initial state. `maxHistory` must be a positive integer or `Infinity`. Otherwise, the constructor throws a `RangeError`.
+
+```typescript
+super({ useHistory: { maxHistory: 100 } });
+```
+
+When a new snapshot exceeds the limit, the container discards the oldest snapshot. The history index and length keep their values. In that case, the container does not emit `historyChange`.
+
 Child containers do not propagate `historyChange` to their parent, because each container keeps its own history.
 
 History snapshots hold references to atom values, so an in-place change to an object value also changes recorded history. See [ObjectAtom for Complex Data](#objectatom-for-complex-data).
