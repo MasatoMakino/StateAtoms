@@ -97,6 +97,7 @@ A separate DevContainer for autonomous Claude Code agents (e.g., a conductor age
 - Event propagation flows upward through container hierarchy
 - Serialization (`toObject`/`toJson`) skips atoms/containers with `skipSerialization: true`; restore (`fromObject`/`fromJson`/`load`) and history include them
 - History feature requires `useHistory: true` in container options
+- `dispose()` prevents memory leaks: a container owns its members, disposes them recursively, and removes all listeners. Disposing a shared member breaks the other subscribers by design
 
 ## Project Structure
 

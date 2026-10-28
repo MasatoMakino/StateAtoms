@@ -249,4 +249,17 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
       ...args,
     });
   }
+
+  /**
+   * Removes every listener on this atom to prevent memory leaks.
+   *
+   * The removal includes listeners of other containers and UI code that share
+   * this atom. This is the designed behavior. Discard the atom after
+   * `dispose()`.
+   *
+   * @since 0.3.1
+   */
+  dispose(): void {
+    this.removeAllListeners();
+  }
 }
