@@ -76,6 +76,24 @@ describe("AtomContainer.historyChange - Undo/redo availability and history chang
     expect(count).toBe(2);
   });
 
+  it("does not emit historyChange when a snapshot at maxHistory replaces the oldest, because the history index and length keep their values", () => {
+    const container = new SimpleAtomContainer({
+      useHistory: { maxHistory: 2 },
+    });
+    let count = 0;
+    container.on("historyChange", () => {
+      count++;
+    });
+
+    container.atom1.value = 5;
+    container.addHistory();
+    expect(count).toBe(1);
+
+    container.atom1.value = 6;
+    container.addHistory();
+    expect(count).toBe(1);
+  });
+
   it("does not propagate historyChange from a child container because parent and child histories are separate", () => {
     const parent = new ParentWithHistoryChild();
     parent.child.atom1.value = 5;
