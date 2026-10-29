@@ -3,6 +3,7 @@
 A lightweight state management library for TypeScript that divides application state into small, reactive units called "Atoms". StateAtoms provides event-driven state management with serialization capabilities and optional undo/redo functionality.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@masatomakino/state-atoms.svg?style=flat)](https://www.npmjs.com/package/@masatomakino/state-atoms)
 [![test](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml/badge.svg)](https://github.com/MasatoMakino/StateAtoms/actions/workflows/ci.yml)
 
 ## Features
