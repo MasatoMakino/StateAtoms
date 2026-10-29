@@ -20,6 +20,8 @@ A lightweight state management library for TypeScript that divides application s
 
 StateAtoms divides state into small units called Atoms, which can be combined into containers to represent complex application state. This modular approach makes it easy to manage and monitor state changes with fine-grained control.
 
+StateAtoms targets visual editors, UI builders, and composer apps. In these apps, users arrange parameters and objects, then save, load, and undo the result.
+
 ## Installation
 
 You can install StateAtoms using npm. Run the following command:
