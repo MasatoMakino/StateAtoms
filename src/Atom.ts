@@ -2,8 +2,7 @@ import EventEmitter from "eventemitter3";
 import type { AtomEvents } from "./AtomEvents.js";
 
 /**
- * Modern configuration options for Atom instances.
- * This is the preferred API that uses consistent naming conventions.
+ * Configuration options for Atom instances.
  *
  * @since 0.1.0
  */
@@ -25,73 +24,39 @@ export type AtomOptionsModern = {
 /**
  * Legacy configuration options for Atom instances.
  *
- * @deprecated Use AtomOptionsModern with skipSerialization instead
+ * @deprecated Use `AtomOptionsModern` instead.
  * @since 0.1.0
  */
 export type AtomOptionsLegacy = {
   /**
    * Whether to exclude this atom from serialization operations.
    *
-   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
+   * @deprecated Use `skipSerialization` instead.
    * @default false
    */
   isSkipSerialization?: boolean;
 };
 
 /**
- * Configuration options for Atom instances.
- *
- * Currently supports both modern and legacy APIs for backward compatibility.
+ * Configuration options for Atom instances. Accepts `AtomOptionsModern` and
+ * the deprecated `AtomOptionsLegacy`.
  *
  * @since 0.1.0
- *
- * @remarks
- * **Migration Plan:**
- * - In a future major version, legacy support (AtomOptionsLegacy) will be removed
- * - AtomOptionsModern will be renamed to AtomOptions
- * - This union type structure will be simplified to contain only the modern API
- *
- * **Recommended Usage:**
- * Use AtomOptionsModern directly for new code to avoid future migration needs.
  */
 export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
 
 /**
- * A class that holds primitive values and emits events when those values change.
+ * Holds a value and emits `change` when the value changes.
  *
- * The Atom class provides reactive state management by automatically emitting
- * events when its value changes. It supports serialization control and integrates
- * with the AtomContainer for hierarchical state management.
+ * Atom compares values with strict equality (`===`). For objects that need
+ * deep equality, use {@link ObjectAtom}.
  *
- * ## Event System Design
- *
- * Atom emits two types of events with distinct purposes:
- * - **`change`**: Automatically emitted for immediate UI updates and state synchronization
- * - **`addHistory`**: Manually emitted to request history snapshots at appropriate user interaction boundaries
- *
- * ### Why Manual History Events?
- *
- * History events are **not** automatically emitted on value changes to prevent UI performance
- * issues and poor undo/redo user experience. In high-frequency UI interactions (like dragging
- * sliders), automatic history would create excessive snapshots that make undo operations
- * unusable. Instead, applications control when meaningful state snapshots are created.
- *
- * ### Loose Coupling with UI
- *
- * This design allows UI components to request history snapshots without knowing about
- * parent containers, maintaining clean separation of concerns.
+ * Atom does not emit `addHistory` when its value changes. Emit `addHistory`
+ * at the end of an interaction, such as a drag end, so that one undo step
+ * matches one user action. Code that emits `addHistory` on an atom does not
+ * need a reference to the containers of the atom.
  *
  * @template T - The type of value this atom holds
- *
- * @example
- * ```typescript
- * const numberAtom = new Atom(42);
- * numberAtom.on("change", (args) => {
- *   console.log(`Value changed from ${args.valueFrom} to ${args.value}`);
- * });
- *
- * numberAtom.value = 100; // Emits "change" event
- * ```
  *
  * @example
  * ```typescript
@@ -116,8 +81,6 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  * ```
  *
  * @since 0.1.0
- * @see {@link AtomContainer} for managing multiple atoms
- * @see {@link ObjectAtom} for objects requiring deep equality comparison
  * @see {@link https://github.com/MasatoMakino/StateAtoms/blob/main/docs/ui-integration-patterns.md | UI Integration Patterns} for comprehensive UI integration examples
  */
 export class Atom<T> extends EventEmitter<AtomEvents<T>> {
@@ -133,26 +96,10 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
    */
   readonly skipSerialization: boolean;
 
-  /**
-   * Creates a new Atom instance.
-   *
-   * Atom uses strict equality (`===`) for change detection, making it ideal for
-   * primitive values. For complex objects requiring deep equality comparison,
-   * consider using ObjectAtom instead.
-   *
-   * @param initialValue - The initial value for this atom
-   * @param options - Configuration options
-   *
-   * @see {@link ObjectAtom} for deep equality comparison of objects
-   */
   constructor(initialValue: T, options?: AtomOptionsModern);
 
   /**
-   * Creates a new Atom instance with legacy options.
-   *
-   * @deprecated Use the constructor with AtomOptionsModern instead
-   * @param initialValue - The initial value for this atom
-   * @param options - Legacy configuration options
+   * @deprecated Use the constructor with `AtomOptionsModern` instead.
    */
   constructor(initialValue: T, options?: AtomOptionsLegacy);
 
@@ -166,54 +113,31 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   }
 
   /**
-   * Determines whether this atom should be excluded from serialization
-   * operations like AtomContainer.toJson() and toObject().
-   *
-   * @deprecated Use `skipSerialization` instead. This property will be removed in a future version.
-   * @default false
+   * @deprecated Use `skipSerialization` instead.
    */
   get isSkipSerialization(): boolean {
     return this.skipSerialization;
   }
 
-  /**
-   * Gets the current value of this atom.
-   *
-   * @returns The current value
-   */
   get value() {
     return this._value;
   }
 
   /**
-   * Sets a new value for this atom. If the new value is different from the current value,
-   * it will emit "beforeChange" and "change" events.
-   *
-   * Uses strict equality (`===`) for change detection, which is optimal for primitive values
-   * like numbers, strings, and booleans. For objects, dates, or complex types requiring
-   * deep equality comparison, consider using ObjectAtom instead.
+   * Emits `beforeChange` and `change` when the new value differs from the
+   * current value by strict equality (`===`).
    *
    * Writing to a field of the object that `value` returns does not run this
    * setter: no event fires, and history snapshots that share the object change.
    *
-   * @param newValue - The new value to set
-   *
    * @example
    * ```typescript
-   * const atom = new Atom(1);
-   * atom.value = 2; // Emits events
-   * atom.value = 2; // No events (same value)
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // For objects, use ObjectAtom for proper deep equality
+   * // Different Date instances differ by `===`, so this assignment emits events.
    * const dateAtom = new Atom(new Date("2024-01-01"));
-   * dateAtom.value = new Date("2024-01-01"); // Emits event (different references)
-   * // Consider: new ObjectAtom(new Date("2024-01-01")) for deep equality
+   * dateAtom.value = new Date("2024-01-01");
    * ```
    *
-   * @see {@link ObjectAtom} for deep equality comparison of complex objects
+   * @see {@link ObjectAtom} for deep equality comparison
    */
   set value(newValue: T) {
     if (this._value === newValue) {
@@ -223,17 +147,9 @@ export class Atom<T> extends EventEmitter<AtomEvents<T>> {
   }
 
   /**
-   * Internal method to update the atom's value and emit change events.
-   * This method is called by the value setter and can be overridden in subclasses
-   * to customize change detection behavior.
-   *
-   * @param oldValue - The previous value
-   * @param newValue - The new value
-   *
-   * @emits beforeChange - Fired before the value is updated
-   * @emits change - Fired after the value is updated
-   *
-   * @protected
+   * Writes the new value. Emits `beforeChange` before the write and `change`
+   * after it. The value setter calls this method after change detection.
+   * Subclasses can override this method.
    */
   protected updateValue(oldValue: T, newValue: T) {
     const args = {

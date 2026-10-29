@@ -84,7 +84,7 @@ userAtom.value = { name: "John", age: 30 };
 userAtom.value = { name: "Jane", age: 25 };
 ```
 
-`ObjectAtom` is for a value that changes as a whole, such as coordinates or a color. For data that changes field by field, nest containers whose leaf atoms hold primitive values.
+`ObjectAtom` is for a value that changes as a whole, such as coordinates or a color. For data that changes field by field, nest containers whose leaf atoms hold primitive values. For a collection whose keys change at run time, see [Keyed collections](docs/keyed-collections.md).
 
 To change an object value in an `ObjectAtom` or an `Atom`, assign a new object. Treat the object that `value` returns as read-only:
 

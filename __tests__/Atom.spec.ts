@@ -29,8 +29,6 @@ describe("Atom - Core reactive primitive value management", () => {
     });
   });
 
-  // Enhanced tests for constructor and behavior validation
-
   describe("Edge cases and special values", () => {
     it("should handle null values correctly", () => {
       const atom = new Atom<string | null>(null);
@@ -63,7 +61,7 @@ describe("Atom - Core reactive primitive value management", () => {
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // NaN !== NaN, so this should trigger a change
+      // NaN !== NaN, so the assignment counts as a change.
       atom.value = NaN;
       expect(spy).toHaveBeenCalled();
     });
@@ -83,7 +81,6 @@ describe("Atom - Core reactive primitive value management", () => {
 
   describe("Same value assignment behavior", () => {
     it("should not emit events when setting identical values (primitives and object references)", () => {
-      // Test primitive values
       const numberAtom = new Atom(42);
       const stringAtom = new Atom("hello");
       const obj = { test: "value" };
@@ -94,7 +91,6 @@ describe("Atom - Core reactive primitive value management", () => {
       stringAtom.on("change", spies[1]);
       objectAtom.on("change", spies[2]);
 
-      // Setting same values should not emit events
       numberAtom.value = 42;
       stringAtom.value = "hello";
       objectAtom.value = obj; // Same reference
@@ -112,12 +108,12 @@ describe("Atom - Core reactive primitive value management", () => {
 
       atom.on("beforeChange", () => {
         eventOrder.push("beforeChange");
-        expect(atom.value).toBe(1); // Value not yet updated
+        expect(atom.value).toBe(1);
       });
 
       atom.on("change", () => {
         eventOrder.push("change");
-        expect(atom.value).toBe(2); // Value already updated
+        expect(atom.value).toBe(2);
       });
 
       atom.value = 2;
@@ -131,7 +127,7 @@ describe("Atom - Core reactive primitive value management", () => {
         expect(args.from).toBe(atom);
         expect(args.value).toBe("updated");
         expect(args.valueFrom).toBe("initial");
-        expect(atom.value).toBe("initial"); // Value not yet changed
+        expect(atom.value).toBe("initial");
       });
 
       atom.value = "updated";
@@ -144,7 +140,7 @@ describe("Atom - Core reactive primitive value management", () => {
         expect(args.from).toBe(atom);
         expect(args.value).toBe("updated");
         expect(args.valueFrom).toBe("initial");
-        expect(atom.value).toBe("updated"); // Value already changed
+        expect(atom.value).toBe("updated");
       });
 
       atom.value = "updated";
@@ -159,7 +155,6 @@ describe("Atom - Core reactive primitive value management", () => {
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Different array instances should trigger change
       atom.value = arr2;
       expect(spy).toHaveBeenCalled();
       expect(atom.value).toBe(arr2);
@@ -184,7 +179,7 @@ describe("Atom - Core reactive primitive value management", () => {
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Different Date instances should trigger change even with same timestamp
+      // The two Date instances hold the same timestamp.
       atom.value = date2;
       expect(spy).toHaveBeenCalled();
       expect(atom.value).toBe(date2);

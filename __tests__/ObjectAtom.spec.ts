@@ -16,7 +16,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     atom.on("beforeChange", spyBeforeChange);
     atom.on("change", spyChange);
 
-    // Setting structurally identical object should not emit events
     atom.value = { name: "John", age: 30 };
     expect(spyBeforeChange).not.toHaveBeenCalled();
     expect(spyChange).not.toHaveBeenCalled();
@@ -29,7 +28,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     atom.on("beforeChange", spyBeforeChange);
     atom.on("change", spyChange);
 
-    // Setting structurally different object should emit events
     const newValue = { name: "Jane", age: 25 };
     atom.value = newValue;
     expect(spyBeforeChange).toHaveBeenCalledWith({
@@ -52,14 +50,12 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
-    // Structurally identical nested object should not emit
     atom.value = {
       user: { name: "John", settings: { theme: "dark" } },
       config: { autoSave: true },
     };
     expect(spyChange).not.toHaveBeenCalled();
 
-    // Different nested value should emit
     atom.value = {
       user: { name: "John", settings: { theme: "light" } },
       config: { autoSave: true },
@@ -75,14 +71,12 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
-    // Structurally identical arrays should not emit
     atom.value = {
       tags: ["javascript", "typescript"],
       scores: [10, 20, 30],
     };
     expect(spyChange).not.toHaveBeenCalled();
 
-    // Different array order should emit
     atom.value = {
       tags: ["typescript", "javascript"],
       scores: [10, 20, 30],
@@ -97,11 +91,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
-    // Same null value should not emit
     atom.value = { value: null };
     expect(spyChange).not.toHaveBeenCalled();
 
-    // Changing to undefined should emit
     atom.value = { value: undefined };
     expect(spyChange).toHaveBeenCalled();
   });
@@ -114,16 +106,12 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     const spyChange = vi.fn();
     atom.on("change", spyChange);
 
-    // Structurally identical empty structures should not emit
     atom.value = { empty: {}, list: [] };
     expect(spyChange).not.toHaveBeenCalled();
 
-    // Adding to empty array should emit
     atom.value = { empty: {}, list: [1] };
     expect(spyChange).toHaveBeenCalled();
   });
-
-  // Enhanced tests for complex objects and edge cases
 
   describe("Special object types and edge cases", () => {
     it("should handle Date objects with deep equality", () => {
@@ -135,11 +123,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Same timestamp should not emit (deep equality)
       atom.value = { created: date2, updated: date2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different timestamp should emit
       atom.value = { created: date3, updated: date3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -152,7 +138,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Different function instance should emit
       atom.value = { action: func2, value: 42 };
       expect(spy).toHaveBeenCalled();
     });
@@ -175,11 +160,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Structurally identical Map should not emit
       atom.value = { data: map2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different Map content should emit
       atom.value = { data: map3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -193,11 +176,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Structurally identical Set should not emit
       atom.value = { tags: set2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different Set content should emit
       atom.value = { tags: set3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -211,7 +192,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Same special values should not emit
       atom.value = {
         nanValue: NaN,
         infinityValue: Infinity,
@@ -219,7 +199,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different special values should emit
       atom.value = {
         nanValue: 42,
         infinityValue: Infinity,
@@ -239,11 +218,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Same sparse array should not emit
       atom.value = { data: sparse2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Dense array should emit
       atom.value = { data: sparse3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -264,11 +241,9 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Structurally identical mixed array should not emit
       atom.value = { items: mixed2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different mixed array should emit
       atom.value = { items: mixed3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -291,11 +266,10 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Same property values but different instances should not emit (deep equality)
+      // Different instances with the same property values
       atom.value = { user: user2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different property values should emit
       atom.value = { user: user3 };
       expect(spy).toHaveBeenCalled();
     });
@@ -309,12 +283,11 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Different Error instances (even with same message) should emit due to different stack traces
+      // Error instances with the same message differ in their stack traces.
       atom.value = { lastError: error2 };
       expect(spy).toHaveBeenCalledTimes(1);
       spy.mockClear();
 
-      // Different error message should also emit
       atom.value = { lastError: error3 };
       expect(spy).toHaveBeenCalledTimes(1);
     });
@@ -368,18 +341,15 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Structurally identical deep object should not emit
       atom.value = deep2;
       expect(spy).not.toHaveBeenCalled();
 
-      // Different deep value should emit
       atom.value = deep3;
       expect(spy).toHaveBeenCalled();
     });
 
     it("should handle circular references with fast-equals limitations", () => {
-      // Note: fast-equals does not handle circular references well and will cause stack overflow
-      // This test documents the current behavior - circular references should be avoided
+      // fast-equals overflows the stack on a circular reference, so this test uses acyclic objects.
       const obj1 = { name: "circular", id: 1 };
       const obj2 = { name: "circular", id: 1 };
       const obj3 = { name: "different", id: 2 };
@@ -388,26 +358,22 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Same structure should not emit
       atom.value = { data: obj2 };
       expect(spy).not.toHaveBeenCalled();
 
-      // Different structure should emit
       atom.value = { data: obj3 };
       expect(spy).toHaveBeenCalled();
-
-      // Document limitation: circular references cause stack overflow
-      // Users should avoid circular references when using ObjectAtom
     });
   });
 
   describe("Performance and boundary conditions", () => {
+    // Discard condition: the 100 ms limit depends on the speed of the test machine.
+    // Relax or remove the limit if it fails on a slow runner.
     it("should handle large objects efficiently", () => {
       const largeObj1: Record<string, number> = {};
       const largeObj2: Record<string, number> = {};
       const largeObj3: Record<string, number> = {};
 
-      // Create objects with 1000 properties
       for (let i = 0; i < 1000; i++) {
         largeObj1[`prop${i}`] = i;
         largeObj2[`prop${i}`] = i;
@@ -418,19 +384,17 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       const spy = vi.fn();
       atom.on("change", spy);
 
-      // Identical large object should not emit
       const start1 = performance.now();
       atom.value = { data: largeObj2 };
       const end1 = performance.now();
       expect(spy).not.toHaveBeenCalled();
-      expect(end1 - start1).toBeLessThan(100); // Should be fast
+      expect(end1 - start1).toBeLessThan(100);
 
-      // Different large object should emit
       const start2 = performance.now();
       atom.value = { data: largeObj3 };
       const end2 = performance.now();
       expect(spy).toHaveBeenCalled();
-      expect(end2 - start2).toBeLessThan(100); // Should still be fast
+      expect(end2 - start2).toBeLessThan(100);
     });
   });
 });

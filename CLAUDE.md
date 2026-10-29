@@ -1,107 +1,25 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+StateAtoms is a TypeScript state management library. It divides application state into small units called atoms.
 
-## Project Overview
+## Development commands
 
-StateAtoms is a lightweight state management library for TypeScript that divides application state into small units called "Atoms". The library provides reactive state management with event-driven updates and serialization capabilities.
+On the host, run npm commands only inside the development container, through `devcontainer exec --workspace-folder .`. The container has no Git, so run Git on the host. For the available tasks (build, test, coverage, pre-commit, pre-push, version), see `.vscode/tasks.json`. For the container design, see `.devcontainer/README.md`.
 
-## Core Architecture
+Biome formats and lints the code. To set up Git hooks that run these checks, see `.devcontainer/sample-hooks/README.md`.
 
-### Key Components
+## Agent container
 
-- **Atom**: Base class for holding primitive values with change notifications
-- **ObjectAtom**: Specialized atom for objects using deep equality comparison via fast-equals
-- **AtomContainer**: Container for managing multiple atoms/containers with event propagation
-- **AtomEventArgs**: Event data interface for state changes
+`.devcontainer/claude/` defines a separate container for autonomous Claude Code agents. Git and the `gh` CLI are available inside it, and `init-firewall.sh` restricts its network. Inside this container, run commands directly without `devcontainer exec`.
 
-### Design Patterns
+## Architecture notes
 
-- Event-driven architecture using EventEmitter3
-- Hierarchical state containers with automatic event propagation
-- Serialization/deserialization support for state persistence
-- Optional history management with undo/redo capabilities
+- An AtomContainer subclass calls `connectMemberAtoms()` in its constructor after it adds every member atom
+- `beforeChange`, `change`, and `addHistory` propagate upward through the container hierarchy. `historyChange` does not propagate
+- Serialization (`toObject`/`toJson`) skips atoms and containers with `skipSerialization: true`. Restore (`fromObject`/`fromJson`/`load`) and history include them
+- History requires `useHistory` (`true` or `{ maxHistory }`) in the container options
+- `dispose()` prevents memory leaks. A container owns its members, disposes them recursively, and removes all listeners. Disposing a shared member breaks its other subscribers by design
 
-### Key Files
+## Local notes
 
-- `src/Atom.ts`: Core atom implementation with change detection
-- `src/AtomContainer.ts`: Container class with serialization and history features
-- `src/ObjectAtom.ts`: Deep equality atom for complex objects
-- `src/AtomEventArgs.ts`: Event argument interfaces
-
-## Development Commands
-
-All development commands should be executed via the development container using devcontainer CLI. See **`.vscode/tasks.json`** for available tasks:
-
-### Container Management
-- **Dev Container: up** - Create and start the development container
-
-### Building
-- **Dev Container: build** - Compiles TypeScript to ES modules in the `esm/` directory
-
-### Testing
-- **Dev Container: test** - Run all tests
-- **Dev Container: coverage** - Run tests with coverage report
-
-### Code Quality
-- **Dev Container: pre-commit** - Format code using Biome
-- **Dev Container: pre-push** - Full validation (build check, tests, Biome CI)
-
-### Version Management
-- **Dev Container: version (prompt)** - Interactive version bump (patch/minor/major/prerelease)
-
-All tasks use `devcontainer exec --workspace-folder .` for command execution. Uses Biome for linting and formatting (2-space indentation, double quotes, 80 char line width).
-
-## Development Container
-
-### npm Isolation Container
-
-- **Image**: `node:22-bookworm-slim` (minimal Node.js 22 image, no Git)
-- **npm Isolation**: All npm commands execute exclusively in the container
-- **Git Operations**: Performed on host OS only (container has no Git)
-
-For detailed container architecture, security model, and configuration, see:
-- **`.devcontainer/README.md`**: Complete DevContainer documentation
-
-#### Git Hooks Setup (Optional)
-
-Git hooks can automatically run code quality checks before commits and pushes by bridging host Git and container npm.
-
-See **`.devcontainer/sample-hooks/README.md`** for setup instructions.
-
-### Agent Container (Claude Code Sandbox)
-
-A separate DevContainer for autonomous Claude Code agents (e.g., a conductor agent that orchestrates multiple worktrees in parallel).
-
-- **Config**: `.devcontainer/claude/`
-- **Image**: `node:24` (full image with Git, gh CLI, git-delta)
-- **Git**: Available inside the container (unlike the development container)
-- **Includes**: Claude Code CLI, zsh, fzf, nano, vim, jq
-- **Network**: Firewall-restricted via `init-firewall.sh` (`NET_ADMIN` capability)
-- **Commands run directly** (no `devcontainer exec` needed from inside)
-
-## Technical Details
-
-### Peer Dependencies
-- **eventemitter3**: Event system for state change notifications
-- **fast-equals**: Deep equality comparison for ObjectAtom
-
-### TypeScript Configuration
-- Target: ES2021
-- Module: ES2022
-- Strict mode enabled
-- Declaration files generated with declaration maps
-
-### Architecture Notes
-- All atoms must call `connectMemberAtoms()` in AtomContainer constructors after adding member atoms
-- Event propagation flows upward through container hierarchy
-- Serialization (`toObject`/`toJson`) skips atoms/containers with `skipSerialization: true`; restore (`fromObject`/`fromJson`/`load`) and history include them
-- History feature requires `useHistory` (`true` or `{ maxHistory }`) in container options
-- `dispose()` prevents memory leaks: a container owns its members, disposes them recursively, and removes all listeners. Disposing a shared member breaks the other subscribers by design
-
-## Project Structure
-
-### Local Development Files
-- **`local-notes/`**: Directory for local development memos and notes (excluded from git)
-  - Contains implementation considerations, debugging notes, and temporary documentation
-  - Files in this directory are not tracked in version control
+`local-notes/` holds local development memos. Git ignores this directory.

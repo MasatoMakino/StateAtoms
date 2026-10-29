@@ -1,18 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer, type AtomEvents } from "../src/index.js";
 
-/**
- * Example interface showing how to extend AtomEvents for custom event types.
- * This pattern allows containers to emit domain-specific events beyond the standard change/history events.
- */
 export interface ExtendAtomEvents extends AtomEvents<unknown> {
   addTest: (arg: number) => void;
 }
 
-/**
- * Test helper demonstrating TypeScript event system extensibility.
- * Shows how to create containers with custom event types while maintaining type safety.
- */
 export class ExtendEventContainer extends AtomContainer<
   unknown,
   ExtendAtomEvents

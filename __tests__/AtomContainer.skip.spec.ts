@@ -2,10 +2,6 @@ import { describe, expect, it } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
 import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
-/**
- * Test helper demonstrating selective serialization control.
- * Uses the legacy isSkipSerialization flag to exclude members from toObject() output.
- */
 export class SkipAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2, { isSkipSerialization: true });
@@ -18,10 +14,6 @@ export class SkipAtomContainer extends AtomContainer {
   }
 }
 
-/**
- * Test helper demonstrating new skipSerialization property.
- * Uses the new skipSerialization naming convention.
- */
 export class NewSkipAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2, { skipSerialization: true });
@@ -34,10 +26,6 @@ export class NewSkipAtomContainer extends AtomContainer {
   }
 }
 
-/**
- * Test helper for backwards compatibility testing.
- * Uses both old and new properties to ensure compatibility.
- */
 export class CompatibilityTestContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atomOld = new Atom(2, { isSkipSerialization: true });
@@ -97,7 +85,6 @@ describe("AtomContainer.skip - Backwards compatibility", () => {
 
   it("should work with mixed old and new properties", () => {
     const container = new CompatibilityTestContainer();
-    // Only atom1 should be serialized (atomOld and atomNew are both skipped)
     expect(container.toObject()).toEqual({ atom1: 1 });
   });
 
@@ -114,9 +101,6 @@ describe("AtomContainer.skip - Backwards compatibility", () => {
   });
 });
 
-/**
- * Test helper for a child container that holds a skipSerialization atom.
- */
 class PanelContainer extends AtomContainer<{ size: number }> {
   readonly size = new Atom(1);
   readonly activeTab = new Atom("general", { skipSerialization: true });
