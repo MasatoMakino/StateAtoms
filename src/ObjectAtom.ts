@@ -7,8 +7,9 @@ import { Atom } from "./Atom.js";
  *
  * ObjectAtom is for a value that changes as a whole. See {@link https://github.com/MasatoMakino/StateAtoms/blob/main/README.md#objectatom-for-complex-data | ObjectAtom for Complex Data}.
  *
- * Two Error instances with the same message still differ, because their
- * stack traces differ. A circular reference causes a stack overflow.
+ * Two Error instances with the same message can still differ, because the
+ * comparison includes their stack traces. A circular reference causes a
+ * stack overflow.
  *
  * @template T - The type of object this atom holds
  *

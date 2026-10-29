@@ -77,9 +77,10 @@ export type AtomContainerOptions =
   | AtomContainerOptionsLegacy;
 
 /**
- * Holds Atoms and AtomContainers as members and re-emits their events
- * unchanged. It serializes and restores member values, and provides undo and
- * redo when history is enabled.
+ * Holds Atoms and AtomContainers as members and re-emits their
+ * `beforeChange`, `change`, and `addHistory` events unchanged. It serializes
+ * and restores member values, and provides undo and redo when history is
+ * enabled.
  *
  * A subclass must call `connectMemberAtoms()` in its constructor after it
  * initializes every member. Members can come from class fields or from
@@ -232,8 +233,8 @@ export class AtomContainer<
    * is enabled. Call it in the constructor after you initialize every member.
    * Later calls do not register a member twice or add another initial entry.
    *
-   * Without this call, member events do not reach the container, history
-   * does not start, and operations such as `fromObject()` warn once.
+   * Without this call, member events do not reach the container, so history
+   * records no member changes. Operations such as `fromObject()` warn once.
    *
    * @since 0.2.0
    *
@@ -418,8 +419,8 @@ export class AtomContainer<
   }
 
   /**
-   * Restores the next history state that the last `undo()` left. Does
-   * nothing when `canRedo()` returns `false`.
+   * Restores the next history state. Does nothing when `canRedo()` returns
+   * `false`.
    * It also reverts changes that `addHistory()` has not recorded. The restore
    * includes atoms and containers marked with skipSerialization.
    * It sets atom values directly and does not call `fromObject()`. Each

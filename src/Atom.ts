@@ -53,7 +53,8 @@ export type AtomOptions = AtomOptionsModern | AtomOptionsLegacy;
  *
  * Atom does not emit `addHistory` when its value changes. Emit `addHistory`
  * at the end of an interaction, such as a drag end, so that one undo step
- * matches one user action. The atom does not need to know its containers.
+ * matches one user action. Code that emits `addHistory` on an atom does not
+ * need a reference to the containers of the atom.
  *
  * @template T - The type of value this atom holds
  *
