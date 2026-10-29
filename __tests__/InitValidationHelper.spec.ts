@@ -125,18 +125,14 @@ describe("InitValidationHelper", () => {
       const helper = new InitValidationHelper("TestContainer");
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-      // First warning
       helper.validateInitialized("fromObject");
       expect(consoleSpy).toHaveBeenCalledTimes(1);
 
-      // Second call - should not warn
       helper.validateInitialized("addHistory");
       expect(consoleSpy).toHaveBeenCalledTimes(1);
 
-      // Reset warning state
       helper.resetWarningState();
 
-      // Third call - should warn again
       helper.validateInitialized("undo");
       expect(consoleSpy).toHaveBeenCalledTimes(2);
 
@@ -203,7 +199,6 @@ describe("InitValidationHelper", () => {
         "fromJson",
       ];
 
-      // Only first call should warn
       operations.forEach((operation) => {
         helper.validateInitialized(operation);
       });

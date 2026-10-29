@@ -1,128 +1,38 @@
 import type { AtomEventArgs } from "./AtomEventArgs.js";
 
 /**
- * Event types that can be emitted by Atoms and AtomContainers.
- *
- * This interface defines the complete set of events that atoms can emit
- * during their lifecycle. These events enable reactive programming patterns
- * by allowing observers to respond to state changes.
+ * Events that Atoms and AtomContainers emit. A container re-emits the
+ * `beforeChange`, `change`, and `addHistory` events of its members.
  *
  * @template T - The type of value held by the atom
  *
- * @example
- * ```typescript
- * const atom = new Atom(42);
- *
- * // Listen to beforeChange event
- * atom.on("beforeChange", (args) => {
- *   console.log(`About to change from ${args.valueFrom} to ${args.value}`);
- *   // Validation or side effects before change
- * });
- *
- * // Listen to change event
- * atom.on("change", (args) => {
- *   console.log(`Changed from ${args.valueFrom} to ${args.value}`);
- *   // React to completed change
- * });
- *
- * // Listen to history events (AtomContainer with history enabled)
- * container.on("addHistory", () => {
- *   console.log("State saved to history");
- * });
- * ```
- *
- * @example
- * ```typescript
- * // Type-safe event handling with specific atom types
- * const stringAtom = new Atom<string>("hello");
- *
- * stringAtom.on("change", (args: AtomEventArgs<string>) => {
- *   // args.value and args.valueFrom are strongly typed as string
- *   console.log(`String changed: "${args.valueFrom}" -> "${args.value}"`);
- * });
- * ```
- *
  * @since 0.1.0
- * @see {@link AtomEventArgs} for the event argument structure
- * @see {@link Atom} for the class that emits these events
- * @see {@link AtomContainer} for containers that propagate these events
  */
 export interface AtomEvents<T> {
   /**
-   * Emitted before an atom's value is changed.
-   *
-   * This event is fired before the internal value is updated, allowing
-   * listeners to perform validation, logging, or other side effects
-   * before the change takes place.
-   *
-   * @param arg - Event arguments containing the atom, new value, and old value
-   *
-   * @example
-   * ```typescript
-   * atom.on("beforeChange", (args) => {
-   *   if (args.value < 0) {
-   *     console.warn("Negative value detected!");
-   *   }
-   * });
-   * ```
+   * An atom emits this event before it writes the new value.
    */
   beforeChange: (arg: AtomEventArgs<T>) => void;
 
   /**
-   * Emitted after an atom's value has been changed.
-   *
-   * This event is fired after the internal value has been updated,
-   * allowing listeners to react to the completed state change.
-   * This is the most commonly used event for reactive updates.
-   *
-   * @param arg - Event arguments containing the atom, new value, and old value
-   *
-   * @example
-   * ```typescript
-   * atom.on("change", (args) => {
-   *   updateUI(args.value);
-   *   saveToLocalStorage(args.value);
-   * });
-   * ```
+   * An atom emits this event after it writes the new value.
    */
   change: (arg: AtomEventArgs<T>) => void;
 
   /**
-   * Emitted when a state change should be added to history.
+   * Requests a history snapshot. Atoms do not emit this event when a value
+   * changes. Application code emits it at the end of an interaction, such as
+   * a drag end, a blur, or a form submission, so that one undo step matches
+   * one user action. A container with history enabled adds a snapshot when
+   * it receives this event.
    *
-   * **Important**: This event must be manually emitted by application code at appropriate
-   * interaction boundaries, not automatically on every value change. This design allows
-   * applications to control when meaningful snapshots are created, preventing excessive
-   * undo/redo entries in high-frequency UI interactions.
-   *
-   * This event is used by AtomContainer instances with history enabled to trigger
-   * manual history management. The event signals that the current state represents
-   * a meaningful user action that should be saved for undo/redo operations.
-   *
-   * ### When to Emit
-   * - End of user interactions (drag end, blur events, form submission)
-   * - Completion of logical operations (not intermediate steps)
-   * - At natural breakpoints that users would expect to undo to
-   *
-   * ### UI Integration Patterns
-   * Different UI elements require different timing strategies for optimal user experience.
-   * See {@link https://github.com/MasatoMakino/StateAtoms/blob/main/docs/ui-integration-patterns.md | UI Integration Patterns} for comprehensive examples.
+   * For the timing of each UI element, see {@link https://github.com/MasatoMakino/StateAtoms/blob/main/docs/ui-integration-patterns.md | UI Integration Patterns}.
    *
    * @example
    * ```typescript
-   * // AtomContainer listening for manual history management requests
-   * container.on("addHistory", () => {
-   *   console.log("History snapshot taken");
-   * });
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Manual emission from UI interaction
    * const textAtom = new Atom("");
-   *
-   * input.addEventListener('blur', () => {
-   *   textAtom.emit('addHistory'); // Save when user finishes editing
+   * input.addEventListener("blur", () => {
+   *   textAtom.emit("addHistory"); // Save when the user finishes editing
    * });
    * ```
    */

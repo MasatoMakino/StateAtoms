@@ -2,10 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer, ObjectAtom } from "../src/index.js";
 import { SimpleAtomContainer } from "./AtomContainer.spec.js";
 
-/**
- * Test helper demonstrating nested container hierarchies.
- * Tests multi-level event propagation and serialization of complex state structures.
- */
 export class MultipleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(3);
   readonly atom2 = new Atom(4);
@@ -84,9 +80,6 @@ describe("MultipleAtomContainer - Nested container hierarchies and event propaga
   });
 });
 
-/**
- * Test helper with a nested container and an ObjectAtom side by side.
- */
 class RestoreGranularityContainer extends AtomContainer {
   readonly count = new Atom(0);
   readonly child = new SimpleAtomContainer();
