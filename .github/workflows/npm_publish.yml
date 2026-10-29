@@ -4,8 +4,8 @@ on:
     types: [published]
 
 permissions:
-  id-token: write  # Required for OIDC authentication
-  contents: read   # Required for repository access
+  id-token: write # Required for OIDC authentication
+  contents: read # Required for repository access
 
 jobs:
   npm-publish:
