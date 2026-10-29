@@ -131,7 +131,7 @@ const app = new AppContainer();
 app.on("change", (args) => {
   console.log(`Changed: ${args.from.constructor.name}`);
   console.log(`Value: ${args.valueFrom} -> ${args.value}`);
-  
+
   // Recommended: Use explicit typing or type guards
   if (args.from === app.count) {
     console.log(`Count changed to: ${args.value as number}`);
@@ -191,13 +191,13 @@ const container = new HistoryContainer();
 
 // Manual history management for meaningful undo points
 container.count.value = 1;
-container.count.emit('addHistory'); // Save meaningful state
+container.count.emit("addHistory"); // Save meaningful state
 
 container.count.value = 2;
-container.count.emit('addHistory'); // Save another meaningful state
+container.count.emit("addHistory"); // Save another meaningful state
 
 container.count.value = 3;
-container.count.emit('addHistory'); // Save final state
+container.count.emit("addHistory"); // Save final state
 
 console.log(container.count.value); // 3
 
@@ -240,7 +240,6 @@ Manual `addHistory` events allow applications to control when meaningful snapsho
 ### Advanced Configuration
 
 `skipSerialization` marks temporary state that the server does not need, such as screen transition state. A container treats these members as follows:
-
 - `toObject()` and `toJson()` exclude them.
 - `fromObject()`, `fromJson()`, and `load()` restore them, so the server can supply initial values.
 - History records them, and `undo()` and `redo()` restore them.
@@ -274,7 +273,6 @@ Some values need none of serialization, restore, and history. Examples are crede
 `dispose()` prevents memory leaks. A container adds listeners to its member atoms, so a member atom references the container. If code outside the container still references a member atom, that atom keeps the container alive. When you discard state, call `dispose()` on the root container.
 
 A container owns its members. `dispose()` on a container does the following:
-
 - Calls `dispose()` on every member `Atom` and `AtomContainer` at every nesting level, including members marked with `skipSerialization`.
 - Removes every listener on each member and on the container itself, including listeners that your UI code added.
 
@@ -309,7 +307,6 @@ container.connectMemberAtoms();
 ### Atom\<T>
 
 Holds primitive values with change notifications.
-
 - `constructor(initialValue: T, options?)`: Create a new atom
 - `value: T`: Get/set the current value
 - `skipSerialization: boolean`: Whether a container excludes this atom from `toObject()` and `toJson()`. Restore and history include it (default: `false`)
@@ -322,7 +319,6 @@ Holds primitive values with change notifications.
 ### ObjectAtom\<T>
 
 Extends Atom with deep equality comparison for objects.
-
 - Uses `fast-equals` for structural comparison
 - Same API as Atom but with smarter change detection
 
@@ -363,21 +359,21 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 class MyContainer extends AtomContainer<{ count: number; active: boolean }> {
   count = new Atom(0);
   active = new Atom(false);
-  
+
   constructor() {
     super();
     this.connectMemberAtoms();
-    
+
     // Pattern 1: Explicit type specification
     this.on("change", (args: AtomEventArgs<number>) => {
       if (args.from === this.count) {
         console.log(`Count: ${args.value}`);
       }
     });
-    
+
     // Pattern 2: Type guards
     this.on("change", (args) => {
-      if (typeof args.value === 'number') {
+      if (typeof args.value === "number") {
         console.log(`Number value: ${args.value}`);
       }
     });
@@ -388,7 +384,10 @@ class MyContainer extends AtomContainer<{ count: number; active: boolean }> {
 interface CustomEvents extends AtomEvents<unknown> {
   customEvent: (data: string) => void;
 }
-class CustomContainer extends AtomContainer<{ count: number; active: boolean }, CustomEvents> {
+class CustomContainer extends AtomContainer<
+  { count: number; active: boolean },
+  CustomEvents
+> {
   // Custom event types with explicit specification
 }
 ```
@@ -396,17 +395,20 @@ class CustomContainer extends AtomContainer<{ count: number; active: boolean }, 
 ## Development
 
 ### Building
+
 ```bash
 npm run build
 ```
 
-### Testing  
+### Testing
+
 ```bash
 npm test          # Run all tests
 npm run coverage  # Run tests with coverage
 ```
 
 ### Code Quality
+
 ```bash
 npx biome check   # Lint and format check
 npx biome format  # Format code

@@ -55,7 +55,6 @@ Do not hold a `Map` in an `ObjectAtom`. `ObjectAtom` compares the new value with
 `JSON.stringify()` converts a `Map` to `{}`. As a result, `toJson()` drops every entry without an error. `fromJson()` then assigns a plain object to the atom.
 
 Select one of the following approaches:
-
 - If string keys are enough, hold the collection in an `Atom<Readonly<Record<string, V>>>`. `toJson()` and `fromJson()` keep its entries.
 - If the server does not need the collection, set `skipSerialization: true` on the atom. The container still restores the atom through `undo()` and `redo()`.
 - To keep a `Map`, convert it outside the container. Convert the output of `toObject()` before you serialize it, and convert the input before you pass it to `fromObject()` or `load()`.

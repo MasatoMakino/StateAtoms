@@ -130,7 +130,6 @@ This ensures hooks work correctly:
 ### File Path Argument Passing
 
 The pre-commit hook passes file paths explicitly to the container:
-
 1. **Host determines staged files**: `STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)`
 2. **Paths are repo-root-relative**: No path transformation needed
 3. **Pass to container**: `npm run pre-commit -- $STAGED_FILES`
@@ -144,7 +143,6 @@ The pre-commit hook passes file paths explicitly to the container:
 ### Re-staging Logic (pre-commit)
 
 The pre-commit hook uses efficient re-staging:
-
 1. **Get staged files BEFORE npm run** (enables early return if no files staged)
 2. **Run formatter** in container with explicit file paths
 3. **Re-stage each file** with proper handling:

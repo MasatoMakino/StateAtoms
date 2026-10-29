@@ -22,18 +22,18 @@ Best for single-line text inputs where users expect to "commit" their changes.
 const textAtom = new Atom("");
 
 // Update value immediately for live preview/validation
-input.addEventListener('input', (e) => {
+input.addEventListener("input", (e) => {
   textAtom.value = e.target.value; // Only emits "change"
 });
 
 // Save to history on completion
-input.addEventListener('blur', () => {
-  textAtom.emit('addHistory'); // User finished editing
+input.addEventListener("blur", () => {
+  textAtom.emit("addHistory"); // User finished editing
 });
 
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    textAtom.emit('addHistory'); // User confirmed with Enter
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    textAtom.emit("addHistory"); // User confirmed with Enter
     input.blur(); // Optional: remove focus
   }
 });
@@ -47,7 +47,7 @@ Best for search inputs or auto-save scenarios where immediate feedback is needed
 const searchAtom = new Atom("");
 let timeoutId: number;
 
-input.addEventListener('input', (e) => {
+input.addEventListener("input", (e) => {
   // Update immediately for live search results
   searchAtom.value = e.target.value;
 
@@ -56,14 +56,14 @@ input.addEventListener('input', (e) => {
 
   // Save to history after user stops typing
   timeoutId = setTimeout(() => {
-    searchAtom.emit('addHistory');
+    searchAtom.emit("addHistory");
   }, 500); // 500ms delay
 });
 
 // Also save on blur to catch incomplete typing sessions
-input.addEventListener('blur', () => {
+input.addEventListener("blur", () => {
   clearTimeout(timeoutId);
-  searchAtom.emit('addHistory');
+  searchAtom.emit("addHistory");
 });
 ```
 
@@ -75,21 +75,21 @@ Best for text areas or code editors where content is substantial and users expec
 const documentAtom = new Atom("");
 
 // Update value immediately for live character count, etc.
-textarea.addEventListener('input', (e) => {
+textarea.addEventListener("input", (e) => {
   documentAtom.value = e.target.value;
 });
 
 // Save to history only on explicit actions
-saveButton.addEventListener('click', () => {
-  documentAtom.emit('addHistory'); // Explicit save action
+saveButton.addEventListener("click", () => {
+  documentAtom.emit("addHistory"); // Explicit save action
 });
 
 // Auto-save with longer debounce for safety
 let autoSaveTimeout: number;
-textarea.addEventListener('input', (e) => {
+textarea.addEventListener("input", (e) => {
   clearTimeout(autoSaveTimeout);
   autoSaveTimeout = setTimeout(() => {
-    documentAtom.emit('addHistory'); // Auto-save after 2 seconds
+    documentAtom.emit("addHistory"); // Auto-save after 2 seconds
   }, 2000);
 });
 ```
@@ -104,26 +104,26 @@ Selection changes are typically discrete user actions that should be immediately
 const selectionAtom = new Atom("option1");
 
 // For select elements
-select.addEventListener('change', (e) => {
+select.addEventListener("change", (e) => {
   selectionAtom.value = e.target.value;
-  selectionAtom.emit('addHistory'); // Selection is complete action
+  selectionAtom.emit("addHistory"); // Selection is complete action
 });
 
 // For radio buttons
-document.querySelectorAll('input[name="options"]').forEach(radio => {
-  radio.addEventListener('change', (e) => {
+document.querySelectorAll('input[name="options"]').forEach((radio) => {
+  radio.addEventListener("change", (e) => {
     if (e.target.checked) {
       selectionAtom.value = e.target.value;
-      selectionAtom.emit('addHistory'); // Radio selection is final
+      selectionAtom.emit("addHistory"); // Radio selection is final
     }
   });
 });
 
 // For single checkbox
 const enabledAtom = new Atom(false);
-checkbox.addEventListener('change', (e) => {
+checkbox.addEventListener("change", (e) => {
   enabledAtom.value = e.target.checked;
-  enabledAtom.emit('addHistory'); // Toggle is complete action
+  enabledAtom.emit("addHistory"); // Toggle is complete action
 });
 ```
 
@@ -135,8 +135,8 @@ Multiple selections require different strategies depending on whether individual
 const selectedItemsAtom = new Atom<string[]>([]);
 
 // Pattern A: Save history after each individual change
-document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-  checkbox.addEventListener('change', (e) => {
+document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+  checkbox.addEventListener("change", (e) => {
     const value = e.target.value;
     // Copy the array. The atom and its history share the array that value returns.
     const currentSelection = [...selectedItemsAtom.value];
@@ -149,15 +149,15 @@ document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
     }
 
     selectedItemsAtom.value = currentSelection;
-    selectedItemsAtom.emit('addHistory'); // Each selection is tracked
+    selectedItemsAtom.emit("addHistory"); // Each selection is tracked
   });
 });
 
 // Pattern B: Batch changes with apply button
 const tempSelection = new Set<string>();
 
-document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-  checkbox.addEventListener('change', (e) => {
+document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+  checkbox.addEventListener("change", (e) => {
     // Update temporary state immediately for UI feedback
     if (e.target.checked) {
       tempSelection.add(e.target.value);
@@ -171,9 +171,9 @@ document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
   });
 });
 
-applyButton.addEventListener('click', () => {
+applyButton.addEventListener("click", () => {
   // Finalize the batch selection
-  selectedItemsAtom.emit('addHistory'); // Save complete batch operation
+  selectedItemsAtom.emit("addHistory"); // Save complete batch operation
 });
 ```
 
@@ -187,13 +187,13 @@ The classic pattern for continuous controls where intermediate values should not
 const valueAtom = new Atom(50);
 
 // During drag: Update value for immediate visual feedback
-slider.addEventListener('input', (e) => {
+slider.addEventListener("input", (e) => {
   valueAtom.value = parseInt(e.target.value); // Live update, no history
 });
 
 // On release: Save the final value to history
-slider.addEventListener('change', (e) => {
-  valueAtom.emit('addHistory'); // Final value after drag ends
+slider.addEventListener("change", (e) => {
+  valueAtom.emit("addHistory"); // Final value after drag ends
 });
 ```
 
@@ -205,33 +205,33 @@ Similar to sliders but may need additional handling for different interaction me
 const colorAtom = new Atom("#ff0000");
 
 // For live color preview during selection
-colorPicker.addEventListener('input', (e) => {
+colorPicker.addEventListener("input", (e) => {
   colorAtom.value = e.target.value; // Live preview
 });
 
 // Save final color choice
-colorPicker.addEventListener('change', (e) => {
-  colorAtom.emit('addHistory'); // Final color selection
+colorPicker.addEventListener("change", (e) => {
+  colorAtom.emit("addHistory"); // Final color selection
 });
 
 // If using a custom color picker with mouse events
 let isDragging = false;
 
-colorCanvas.addEventListener('mousedown', () => {
+colorCanvas.addEventListener("mousedown", () => {
   isDragging = true;
 });
 
-colorCanvas.addEventListener('mousemove', (e) => {
+colorCanvas.addEventListener("mousemove", (e) => {
   if (isDragging) {
     const color = getColorFromEvent(e); // Your color calculation
     colorAtom.value = color; // Live update during drag
   }
 });
 
-colorCanvas.addEventListener('mouseup', () => {
+colorCanvas.addEventListener("mouseup", () => {
   if (isDragging) {
     isDragging = false;
-    colorAtom.emit('addHistory'); // Save when drag ends
+    colorAtom.emit("addHistory"); // Save when drag ends
   }
 });
 ```
@@ -246,18 +246,18 @@ For drag-and-drop interfaces, save history when the entire operation completes.
 const listOrderAtom = new Atom<string[]>(["item1", "item2", "item3"]);
 
 // During drag: Update for visual feedback
-dragContainer.addEventListener('dragover', (e) => {
+dragContainer.addEventListener("dragover", (e) => {
   e.preventDefault();
   // Visual feedback during drag
 });
 
 // On drop: Update immediately and save to history
-dragContainer.addEventListener('drop', (e) => {
+dragContainer.addEventListener("drop", (e) => {
   e.preventDefault();
   const newOrder = calculateNewOrder(e); // Your reordering logic
 
   listOrderAtom.value = newOrder; // Update immediately
-  listOrderAtom.emit('addHistory'); // Save completed reorder operation
+  listOrderAtom.emit("addHistory"); // Save completed reorder operation
 });
 ```
 
@@ -271,38 +271,38 @@ const nameAtom = new Atom("");
 const emailAtom = new Atom("");
 const ageAtom = new Atom(0);
 
-nameInput.addEventListener('blur', () => {
-  nameAtom.emit('addHistory'); // Independent field completion
+nameInput.addEventListener("blur", () => {
+  nameAtom.emit("addHistory"); // Independent field completion
 });
 
-emailInput.addEventListener('blur', () => {
-  emailAtom.emit('addHistory'); // Independent field completion
+emailInput.addEventListener("blur", () => {
+  emailAtom.emit("addHistory"); // Independent field completion
 });
 
 // Strategy B: Form-level history (good for related fields)
 const formAtom = new Atom({ name: "", email: "", age: 0 });
 
 // Update immediately for validation feedback
-[nameInput, emailInput, ageInput].forEach(input => {
-  input.addEventListener('input', () => {
+[nameInput, emailInput, ageInput].forEach((input) => {
+  input.addEventListener("input", () => {
     formAtom.value = {
       name: nameInput.value,
       email: emailInput.value,
-      age: parseInt(ageInput.value) || 0
+      age: parseInt(ageInput.value) || 0,
     };
     // No addHistory here - waiting for form completion
   });
 });
 
 // Save history only on form submission or significant milestones
-form.addEventListener('submit', (e) => {
+form.addEventListener("submit", (e) => {
   e.preventDefault();
-  formAtom.emit('addHistory'); // Complete form submission
+  formAtom.emit("addHistory"); // Complete form submission
 });
 
 // Optional: Save on section completion for long forms
-sectionCompleteButton.addEventListener('click', () => {
-  formAtom.emit('addHistory'); // Section milestone
+sectionCompleteButton.addEventListener("click", () => {
+  formAtom.emit("addHistory"); // Section milestone
 });
 ```
 
@@ -314,13 +314,13 @@ Design history points around what users would naturally expect to undo:
 
 ```typescript
 // ✅ Good: Undo reverts to previous meaningful state
-slider.addEventListener('change', () => {
-  sliderAtom.emit('addHistory'); // User expects to undo to before this drag
+slider.addEventListener("change", () => {
+  sliderAtom.emit("addHistory"); // User expects to undo to before this drag
 });
 
 // ❌ Bad: Undo reverts to arbitrary intermediate state
-slider.addEventListener('input', () => {
-  sliderAtom.emit('addHistory'); // Creates too many meaningless undo points
+slider.addEventListener("input", () => {
+  sliderAtom.emit("addHistory"); // Creates too many meaningless undo points
 });
 ```
 
@@ -331,12 +331,12 @@ Avoid high-frequency history events:
 ```typescript
 // ✅ Good: Debounced or event-based history
 const debouncedHistory = debounce(() => {
-  atom.emit('addHistory');
+  atom.emit("addHistory");
 }, 300);
 
 // ❌ Bad: High-frequency history creation
 setInterval(() => {
-  atom.emit('addHistory'); // Excessive history overhead
+  atom.emit("addHistory"); // Excessive history overhead
 }, 16); // 60fps - too frequent
 ```
 
@@ -347,21 +347,21 @@ Ensure UI elements reflect external atom changes by implementing complete bidire
 ```typescript
 // ✅ Complete bidirectional binding pattern
 const textAtom = new Atom("initial value");
-const input = document.getElementById('myInput') as HTMLInputElement;
+const input = document.getElementById("myInput") as HTMLInputElement;
 
 // 1. User input → Atom (UI to State)
-input.addEventListener('input', (e) => {
+input.addEventListener("input", (e) => {
   textAtom.value = e.target.value; // Update atom from user input
 });
 
 // 2. Atom → UI (State to UI) - Critical for external updates
-textAtom.on('change', (args) => {
+textAtom.on("change", (args) => {
   input.value = args.value; // Reflect external changes to UI
 });
 
 // 3. History management
-input.addEventListener('blur', () => {
-  textAtom.emit('addHistory'); // Save user interaction to history
+input.addEventListener("blur", () => {
+  textAtom.emit("addHistory"); // Save user interaction to history
 });
 
 // Example: External atom update (from API, undo/redo, etc.)
@@ -374,16 +374,18 @@ setTimeout(() => {
 
 ```typescript
 const sharedAtom = new Atom("shared value");
-const inputs = document.querySelectorAll('.synchronized-input') as NodeListOf<HTMLInputElement>;
+const inputs = document.querySelectorAll(
+  ".synchronized-input",
+) as NodeListOf<HTMLInputElement>;
 
 inputs.forEach((input, index) => {
   // User input → Atom
-  input.addEventListener('input', (e) => {
+  input.addEventListener("input", (e) => {
     sharedAtom.value = e.target.value;
   });
 
   // Atom → All inputs (external updates, other input changes)
-  sharedAtom.on('change', (args) => {
+  sharedAtom.on("change", (args) => {
     // Update all inputs except the currently focused one
     if (document.activeElement !== input) {
       input.value = args.value;
@@ -391,8 +393,8 @@ inputs.forEach((input, index) => {
   });
 
   // History from any input
-  input.addEventListener('blur', () => {
-    sharedAtom.emit('addHistory');
+  input.addEventListener("blur", () => {
+    sharedAtom.emit("addHistory");
   });
 });
 
@@ -405,35 +407,38 @@ Establish team conventions for common UI patterns using utility functions:
 
 ```typescript
 // Team utility function for consistent text input handling with bidirectional binding
-function createTextInputBinding(atom: Atom<string>, input: HTMLInputElement,
-                               mode: 'blur' | 'enter' | 'debounce' = 'blur') {
+function createTextInputBinding(
+  atom: Atom<string>,
+  input: HTMLInputElement,
+  mode: "blur" | "enter" | "debounce" = "blur",
+) {
   // 1. User input → Atom (UI to State)
-  input.addEventListener('input', (e) => {
+  input.addEventListener("input", (e) => {
     atom.value = e.target.value;
   });
 
   // 2. Atom → UI (State to UI) - Handle external updates
-  atom.on('change', (args) => {
+  atom.on("change", (args) => {
     input.value = args.value;
   });
 
   // 3. History management based on mode
   switch (mode) {
-    case 'blur':
-      input.addEventListener('blur', () => atom.emit('addHistory'));
+    case "blur":
+      input.addEventListener("blur", () => atom.emit("addHistory"));
       break;
-    case 'enter':
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          atom.emit('addHistory');
+    case "enter":
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          atom.emit("addHistory");
         }
       });
       break;
-    case 'debounce':
+    case "debounce":
       let timeout: number;
-      input.addEventListener('input', () => {
+      input.addEventListener("input", () => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => atom.emit('addHistory'), 300);
+        timeout = setTimeout(() => atom.emit("addHistory"), 300);
       });
       break;
   }
@@ -444,9 +449,9 @@ const nameAtom = new Atom("John");
 const emailAtom = new Atom("john@example.com");
 const searchAtom = new Atom("");
 
-createTextInputBinding(nameAtom, nameInput, 'blur');
-createTextInputBinding(emailAtom, emailInput, 'enter');
-createTextInputBinding(searchAtom, searchInput, 'debounce');
+createTextInputBinding(nameAtom, nameInput, "blur");
+createTextInputBinding(emailAtom, emailInput, "enter");
+createTextInputBinding(searchAtom, searchInput, "debounce");
 
 // External updates will automatically reflect in all bound inputs
 setTimeout(() => {
@@ -459,18 +464,18 @@ setTimeout(() => {
 ```typescript
 function createRangeBinding(atom: Atom<number>, range: HTMLInputElement) {
   // User interaction → Atom
-  range.addEventListener('input', (e) => {
+  range.addEventListener("input", (e) => {
     atom.value = parseInt(e.target.value);
   });
 
   // Atom → UI (external updates)
-  atom.on('change', (args) => {
+  atom.on("change", (args) => {
     range.value = args.value.toString();
   });
 
   // History on drag end
-  range.addEventListener('change', () => {
-    atom.emit('addHistory');
+  range.addEventListener("change", () => {
+    atom.emit("addHistory");
   });
 }
 ```
@@ -480,13 +485,13 @@ function createRangeBinding(atom: Atom<number>, range: HTMLInputElement) {
 ```typescript
 function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
   // User selection → Atom
-  select.addEventListener('change', (e) => {
+  select.addEventListener("change", (e) => {
     atom.value = e.target.value;
-    atom.emit('addHistory'); // Immediate history for selections
+    atom.emit("addHistory"); // Immediate history for selections
   });
 
   // Atom → UI (external updates)
-  atom.on('change', (args) => {
+  atom.on("change", (args) => {
     select.value = args.value;
   });
 }
@@ -495,7 +500,6 @@ function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
 ### 5. Object Values
 
 An atom that holds an object or an array treats it as one value that changes as a whole. Pass values between the atom and the UI as primitives:
-
 - **Atom to UI**: Assign primitive fields of `atom.value` to UI properties.
 - **UI to atom**: Build a new object from UI properties and assign it to `atom.value` itself. Do not assign to fields of `atom.value`.
 
@@ -537,7 +541,6 @@ redoButton.addEventListener("click", () => container.redo());
 ### 7. Derived Values
 
 To show a value that depends on several atoms, keep the result outside atoms. A `change` listener calls a compute function and writes the result to UI state:
-
 - **Source atoms**: Hold the state that history records.
 - **Compute function**: Reads the current values of the source atoms and returns the derived value.
 - **Derived value**: Lives in UI state, such as a variable or the state of your UI framework. It is not an atom.
@@ -576,7 +579,7 @@ During `undo()` and `redo()`, the listener can run before the container restores
 
 ```typescript
 // Test that verifies history is created
-test('slider creates history on change', () => {
+test("slider creates history on change", () => {
   class SliderContainer extends AtomContainer<{ value: number }> {
     value = new Atom(0);
 
@@ -589,7 +592,7 @@ test('slider creates history on change', () => {
 
   // Simulate slider change
   container.value.value = 50;
-  container.value.emit('addHistory');
+  container.value.emit("addHistory");
 
   // Verify that undo restores the value before the change
   container.undo();
@@ -605,14 +608,14 @@ test('slider creates history on change', () => {
 
 ```typescript
 // ❌ Bad: Each keystroke creates history
-input.addEventListener('input', () => {
+input.addEventListener("input", () => {
   atom.value = input.value;
-  atom.emit('addHistory'); // Too frequent
+  atom.emit("addHistory"); // Too frequent
 });
 
 // ✅ Good: Complete editing session creates history
-input.addEventListener('blur', () => {
-  atom.emit('addHistory'); // Appropriate frequency
+input.addEventListener("blur", () => {
+  atom.emit("addHistory"); // Appropriate frequency
 });
 ```
 
@@ -626,10 +629,10 @@ input.addEventListener('blur', () => {
 // Create a binding library for your application
 const UIBindings = {
   textInput: (atom: Atom<string>, input: HTMLInputElement) =>
-    createTextInputBinding(atom, input, 'blur'),
+    createTextInputBinding(atom, input, "blur"),
 
   searchInput: (atom: Atom<string>, input: HTMLInputElement) =>
-    createTextInputBinding(atom, input, 'debounce'),
+    createTextInputBinding(atom, input, "debounce"),
 
   numberRange: (atom: Atom<number>, range: HTMLInputElement) =>
     createRangeBinding(atom, range),
