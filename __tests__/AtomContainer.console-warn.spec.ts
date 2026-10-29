@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
 
-/**
- * Test container that intentionally does NOT call connectMemberAtoms() in constructor.
- * Used to verify warning behavior when operations are called before initialization.
- */
 class UninitializedContainer extends AtomContainer<{
   name: string;
   age: number;
@@ -16,7 +12,7 @@ class UninitializedContainer extends AtomContainer<{
     super();
     this.nameAtom = new Atom(data.name);
     this.ageAtom = new Atom(data.age);
-    // NOTE: Intentionally NOT calling this.connectMemberAtoms() to test warning behavior
+    // Skips connectMemberAtoms() on purpose.
   }
 
   get name() {
@@ -34,17 +30,13 @@ class UninitializedContainer extends AtomContainer<{
   }
 }
 
-/**
- * Test container that properly calls connectMemberAtoms() in constructor.
- * Used as control group to verify no warnings when properly initialized.
- */
 class ProperlyInitializedContainer extends AtomContainer<{ value: number }> {
   public valueAtom: Atom<number>;
 
   constructor(initialValue: number, options?: { useHistory?: boolean }) {
     super(options);
     this.valueAtom = new Atom(initialValue);
-    this.connectMemberAtoms(); // Properly calling connectMemberAtoms()
+    this.connectMemberAtoms();
   }
 
   get value() {
@@ -55,7 +47,6 @@ class ProperlyInitializedContainer extends AtomContainer<{ value: number }> {
   }
 }
 
-// Test helper functions to reduce code duplication
 const createUninitializedContainerWithSpy = () => {
   const container = new UninitializedContainer({ name: "Alice", age: 25 });
   const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -128,7 +119,6 @@ describe("AtomContainer - Console.warn Validation", () => {
     it("should only warn once per container instance", () => {
       const { container, consoleSpy } = createUninitializedContainerWithSpy();
 
-      // Call multiple operations - should only warn once
       container.fromObject({ name: "Bob", age: 30 });
       container.addHistory();
       container.undo();
@@ -172,7 +162,6 @@ describe("AtomContainer - Console.warn Validation", () => {
       const container = new ProperlyInitializedContainer(10);
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-      // Call all operations - none should warn
       container.fromObject({ value: 20 });
       container.addHistory();
       container.undo();
@@ -191,7 +180,6 @@ describe("AtomContainer - Console.warn Validation", () => {
       });
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-      // Test history operations
       container.value = 20;
       container.addHistory();
       container.value = 30;
@@ -215,19 +203,16 @@ describe("AtomContainer - Console.warn Validation", () => {
     it("should stop warning after manual init() call", () => {
       const { container, consoleSpy } = createUninitializedContainerWithSpy();
 
-      // First operation should warn
       container.fromObject({ name: "Bob", age: 30 });
       expect(consoleSpy).toHaveBeenCalledTimes(1);
 
-      // Manually call init to fix the issue
       (container as unknown as { init(): void }).init();
 
-      // Subsequent operations should not warn
       container.addHistory();
       container.undo();
       container.fromJson('{"name":"Charlie","age":35}');
 
-      expect(consoleSpy).toHaveBeenCalledTimes(1); // Still only 1 warning
+      expect(consoleSpy).toHaveBeenCalledTimes(1);
       consoleSpy.mockRestore();
     });
   });
@@ -237,16 +222,12 @@ describe("AtomContainer - Console.warn Validation", () => {
       const { container, consoleSpy } = createUninitializedContainerWithSpy();
       const changeSpy = vi.fn();
 
-      // Try to set up event listener - won't work properly without init()
       container.on("change", changeSpy);
 
-      // Change a value - event won't fire because init() wasn't called
       container.name = "Bob";
 
-      // The event should not have fired due to missing init()
       expect(changeSpy).not.toHaveBeenCalled();
 
-      // Any operation that needs init() should warn
       container.fromObject({ name: "Charlie", age: 30 });
       expect(consoleSpy).toHaveBeenCalled();
 
@@ -257,13 +238,10 @@ describe("AtomContainer - Console.warn Validation", () => {
       const container = new ProperlyInitializedContainer(10);
       const changeSpy = vi.fn();
 
-      // Set up event listener - works because init() was called
       container.on("change", changeSpy);
 
-      // Change a value - event should fire
       container.value = 20;
 
-      // The event should have fired
       expect(changeSpy).toHaveBeenCalledWith({
         from: container.valueAtom,
         value: 20,
@@ -280,7 +258,7 @@ describe("AtomContainer - Console.warn Validation", () => {
         constructor() {
           super();
           this.testAtom = new Atom("test");
-          // Not calling init() to test warning
+          // Skips connectMemberAtoms() on purpose.
         }
       }
 

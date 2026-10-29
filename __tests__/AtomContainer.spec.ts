@@ -5,10 +5,6 @@ import {
   type AtomContainerOptions,
 } from "../src/index.js";
 
-/**
- * Test helper class that demonstrates basic AtomContainer usage patterns.
- * Contains two atoms for testing event propagation, serialization, and state management.
- */
 export class SimpleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2);
@@ -86,7 +82,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
     expect(atomContainer.atom2.value).toBe(42);
   });
 
-  // Enhanced tests for error handling and complex scenarios
   describe("Constructor options and initialization", () => {
     it("should set skipSerialization to false by default", () => {
       const container = new AtomContainer();
@@ -103,13 +98,11 @@ describe("AtomContainer - Hierarchical state management with event propagation a
     it("should handle JSON parsing errors and incompatible data types", () => {
       const container = new SimpleAtomContainer();
 
-      // Invalid JSON should throw
       expect(() => {
         container.fromJson('{"invalid": json}');
       }).toThrow(SyntaxError);
 
-      // Incompatible data types should be accepted (type coercion)
-      // Testing runtime behavior with incompatible types
+      // fromObject does not check value types at runtime.
       container.fromObject({
         atom1: "string instead of number",
         nonExistentProperty: "ignored",
@@ -118,7 +111,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       expect(container.atom1.value).toBe("string instead of number");
       expect(container.atom2.value).toBeNull();
-      // Unknown keys should not be persisted
       expect(container.toObject()).not.toHaveProperty("nonExistentProperty");
     });
   });
@@ -136,7 +128,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       expect(container.toObject()).toEqual({});
       expect(container.toJson()).toBe("{}");
 
-      // Should not throw when loading data
       container.fromObject({});
       container.fromJson("{}");
     });
@@ -162,22 +153,19 @@ describe("AtomContainer - Hierarchical state management with event propagation a
     it("should load data and clear history when useHistory is enabled", () => {
       const container = new SimpleAtomContainer({ useHistory: true });
 
-      // Make some changes to build history
       container.atom1.value = 10;
       container.emit("addHistory");
       container.atom1.value = 20;
       container.emit("addHistory");
 
-      // Load new data should clear history
       container.load({ atom1: 100, atom2: 200 });
 
       expect(container.atom1.value).toBe(100);
       expect(container.atom2.value).toBe(200);
 
-      // Should not be able to undo since history was cleared
       const beforeUndo1 = container.atom1.value;
       container.undo();
-      expect(container.atom1.value).toBe(beforeUndo1); // No change
+      expect(container.atom1.value).toBe(beforeUndo1);
     });
 
     it("should handle load with partial data", () => {
@@ -187,7 +175,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       container.load({ atom1: 999 });
 
       expect(container.atom1.value).toBe(999);
-      expect(container.atom2.value).toBe(originalAtom2Value); // Unchanged
+      expect(container.atom2.value).toBe(originalAtom2Value);
     });
   });
 
@@ -224,11 +212,9 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       container.on("change", spy);
 
-      // Change at deepest level should propagate up
       container.nested.nested.atom.value = "changed";
       expect(spy).toHaveBeenCalled();
 
-      // Serialization should work for deep nesting
       const serialized = container.toObject();
       expect(serialized).toEqual({
         atom: "level1",
@@ -266,7 +252,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
         objectAtom: { key: "value" },
       });
 
-      // Round-trip serialization
       const newContainer = new MixedContainer();
       newContainer.fromObject(serialized);
 
@@ -280,8 +265,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
   describe("Event propagation validation", () => {
     it("should maintain event argument integrity through propagation", () => {
-      // This test documents and validates the current event propagation order.
-      // The order reflects the "immediate re-emission" implementation pattern.
       class NestedContainer extends AtomContainer {
         child = new SimpleAtomContainer();
 
@@ -306,8 +289,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       container.child.atom1.value = 999;
 
-      // This order is the result of immediate re-emission: when a child emits an event,
-      // the parent immediately re-emits it before the child's event processing completes.
+      // A parent re-emits a child event as soon as it receives it.
       expect(eventOrder).toEqual([
         "parent-beforeChange",
         "child-beforeChange",
@@ -346,10 +328,9 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
         constructor() {
           super();
-          this.connectMemberAtoms(); // First call (required)
+          this.connectMemberAtoms();
         }
 
-        // Public method to test multiple init calls
         public reconnectMemberAtoms() {
           this.connectMemberAtoms();
         }
@@ -359,23 +340,18 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       const spyBeforeChange = vi.fn();
       const spyChange = vi.fn();
 
-      // Set up event listeners
       container.on("beforeChange", spyBeforeChange);
       container.on("change", spyChange);
 
-      // Call connectMemberAtoms() multiple times
       container.reconnectMemberAtoms();
       container.reconnectMemberAtoms();
       container.reconnectMemberAtoms();
 
-      // Change atom value to trigger events
       container.atom1.value = 10;
 
-      // Event should be triggered exactly once per change
       expect(spyBeforeChange).toHaveBeenCalledTimes(1);
       expect(spyChange).toHaveBeenCalledTimes(1);
 
-      // Event arguments should be correct
       expect(spyBeforeChange).toHaveBeenCalledWith({
         from: container.atom1,
         value: 10,
@@ -404,14 +380,11 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       const container = new TestContainer();
 
-      // After first connectMemberAtoms(), there should be exactly 1 change listener from container
       expect(container.atom1.listenerCount("change")).toBe(1);
 
-      // Call init multiple times
       container.reconnectMemberAtoms();
       container.reconnectMemberAtoms();
 
-      // Listener count should remain exactly 1
       expect(container.atom1.listenerCount("change")).toBe(1);
     });
 
@@ -432,22 +405,16 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       const container = new HistoryContainer();
       const spyAddHistory = vi.fn();
 
-      // Monitor addHistory events
       container.on("addHistory", spyAddHistory);
 
-      // After connectMemberAtoms() with useHistory:true, there should be exactly 2 listeners:
-      // 1. Internal history listener from initHistory()
-      // 2. Test spy listener we just added
+      // The internal history listener and the spy
       expect(container.listenerCount("addHistory")).toBe(2);
 
-      // Call init multiple times
       container.reconnectMemberAtoms();
       container.reconnectMemberAtoms();
 
-      // History listener count should remain exactly 2
       expect(container.listenerCount("addHistory")).toBe(2);
 
-      // Trigger addHistory manually to verify it still works
       container.emit("addHistory");
       expect(spyAddHistory).toHaveBeenCalled();
     });
