@@ -11,7 +11,7 @@
     "--cap-drop=ALL",
     "--name=${localWorkspaceFolderBasename}-npm-runner"
   ],
-  "postCreateCommand": "npm audit --audit-level=moderate && npm ci && npm audit signatures",
+  "postCreateCommand": "npm audit --audit-level=moderate && npm ci --ignore-scripts && npm audit signatures",
   "containerEnv": {
     "NODE_ENV": "development",
     "NPM_CONFIG_AUDIT": "true"
