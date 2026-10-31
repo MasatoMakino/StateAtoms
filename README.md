@@ -176,6 +176,47 @@ A key that holds `undefined` assigns `undefined` to its atom. The parameter type
 
 The type check lets you omit top-level keys, not keys inside a nested container. To restore part of a nested container, call `fromObject()` on that container.
 
+#### Validate external input
+
+`fromObject()`, `fromJson()`, and `load()` do not check value types at run time. They assign each value to its atom as it is. For example, `fromJson('{"count":"x"}')` stores a string in `Atom<number>`.
+
+The parameter type checks only values that the compiler can see. Input from `JSON.parse()`, a server response, or `localStorage` gets no check. To restore a container from such input, follow these steps:
+1. Pass the input to a type guard function for the data type of the container.
+2. If the type guard rejects the input, throw an error.
+3. Pass the input that the type guard accepts to `fromObject()` or `load()`.
+
+In the type guard, check each key that the input holds against the type of its atom. For a key of a nested container, require every key of that container. You can write the type guard by hand or build it with a schema validation library.
+
+```typescript
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isAppStateInput(input: unknown): input is Partial<AppState> {
+  if (!isRecord(input)) {
+    return false;
+  }
+  const { user, settings } = input;
+  return (
+    (!("user" in input) ||
+      (isRecord(user) &&
+        typeof user.name === "string" &&
+        typeof user.age === "number")) &&
+    (!("count" in input) || typeof input.count === "number") &&
+    (!("settings" in input) ||
+      (isRecord(settings) && typeof settings.theme === "string"))
+  );
+}
+
+const input: unknown = JSON.parse(receivedJson);
+if (!isAppStateInput(input)) {
+  throw new TypeError("The input does not match AppState.");
+}
+app.fromObject(input);
+```
+
+`fromJson()` parses the JSON and restores the container in one call. You cannot check the parsed value between these steps. Use `fromJson()` only for JSON that `toJson()` produced. Do not use it for JSON that anything outside your code can change.
+
 ### History and Undo/Redo
 
 StateAtoms uses manual history management to provide optimal user experience. History snapshots are created at meaningful interaction boundaries, not on every value change.
