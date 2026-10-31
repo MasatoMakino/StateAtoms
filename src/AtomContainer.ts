@@ -189,6 +189,8 @@ export class AtomContainer<
     this.constructor.name,
   );
 
+  private _childContainerKeys: string[] | undefined;
+
   /**
    * @throws {RangeError} If `maxHistory` is not a positive integer or
    * `Infinity`
@@ -253,7 +255,14 @@ export class AtomContainer<
   public connectMemberAtoms(): void {
     this._initValidator.markInitialized();
     this.addMembers();
+    this._childContainerKeys = this.findChildContainerKeys();
     this.initHistory();
+  }
+
+  private findChildContainerKeys(): string[] {
+    return Object.keys(this).filter(
+      (key) => (this as Record<string, unknown>)[key] instanceof AtomContainer,
+    );
   }
 
   /**
@@ -496,15 +505,48 @@ export class AtomContainer<
    * It also restores members marked with skipSerialization.
    * It never writes class fields that are not Atoms or AtomContainers.
    *
-   * @throws {TypeError} If a key of a nested container holds `undefined` or
-   * `null`
+   * @throws {TypeError} If obj is `undefined` or `null`, or if a key of a
+   * nested container holds `undefined` or `null`. It runs this check on the
+   * whole input before it writes any atom. This error leaves every atom
+   * unchanged.
    */
   fromObject(obj: Partial<DataType>): void {
     this._initValidator.validateInitialized("fromObject");
-    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    this.assertRestorable(obj, []);
+    this.applyObject(obj as object);
+  }
+
+  private assertRestorable(obj: unknown, path: string[]): void {
+    if (obj === undefined || obj === null) {
+      const target =
+        path.length === 0 ? "The input" : `The value for "${path.join(".")}"`;
+      throw new TypeError(`${target} is ${obj}. A container needs an object.`);
+    }
+    const keys = this._childContainerKeys ?? this.findChildContainerKeys();
+    for (const key of keys) {
+      const value = (obj as Record<string, unknown>)[key];
+      // Only an undefined value needs the own-property check, which allocates.
+      if (
+        value === undefined &&
+        Object.getOwnPropertyDescriptor(obj, key) === undefined
+      ) {
+        continue;
+      }
+      const member = (this as Record<string, unknown>)[key];
+      if (member instanceof AtomContainer) {
+        path.push(key);
+        member.assertRestorable(value, path);
+        path.pop();
+      }
+    }
+  }
+
+  private applyObject(obj: object): void {
+    for (const [key, value] of Object.entries(obj)) {
       const member = (this as Record<typeof key, unknown>)[key];
       if (member instanceof AtomContainer) {
-        member.fromObject(value as Record<string, unknown>);
+        member._initValidator.validateInitialized("fromObject");
+        member.applyObject(value);
       } else if (member instanceof Atom) {
         member.value = value;
       }
@@ -528,15 +570,19 @@ export class AtomContainer<
    * first history entry.
    * Emits historyChange once when the history index or length differs from
    * the state before the call.
+   *
+   * @throws {TypeError} On the same input as `fromObject()`. This error leaves
+   * every atom and the history unchanged.
    */
   load(obj: Partial<DataType>) {
     this._initValidator.validateInitialized("load");
+    this.assertRestorable(obj, []);
     this.trackHistoryChange(() => {
       if (this._useHistory) {
         this._history = [];
         this._historyIndex = -1;
       }
-      this.fromObject(obj);
+      this.applyObject(obj as object);
       this.addHistory();
     });
   }
