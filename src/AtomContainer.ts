@@ -487,6 +487,7 @@ export class AtomContainer<
   /**
    * Restores the values of Atoms and AtomContainers from a plain object.
    * It updates only existing atoms and containers, and ignores unknown keys.
+   * It does not check value types at run time.
    * Keys absent from obj leave their atoms unchanged, at every nesting level.
    * A key that holds undefined assigns undefined to its atom. The parameter
    * type rejects `undefined` for an atom or a nested container whose type
