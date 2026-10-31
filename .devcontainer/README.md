@@ -74,6 +74,7 @@ Uses official Node.js Docker image:
 - All npm commands execute exclusively in the container
 - Host OS npm is never used, protecting against malicious package scripts
 - Automatic `npm audit --audit-level=moderate` on container start
+- `postCreateCommand` runs `npm ci --ignore-scripts`, so install scripts of dependencies do not run
 
 ### node_modules Access Model
 
