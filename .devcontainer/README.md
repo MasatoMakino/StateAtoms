@@ -68,6 +68,7 @@ Uses official Node.js Docker image:
 - `--cap-drop=ALL`: Removes all Linux capabilities for defense in depth
 - `remoteUser: node`: Non-root user execution (UID:1000, GID:1000)
 - Isolated credentials: No automatic credential forwarding from host
+- Hidden `.git`: An empty tmpfs covers the host `.git`. Code that runs in the container cannot read the repository or write Git hooks and config that the host Git runs
 
 **npm Execution Isolation:**
 - All npm commands execute exclusively in the container
@@ -91,13 +92,17 @@ Uses official Node.js Docker image:
 
 ```json
 {
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached"
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "mounts": [
+    "type=tmpfs,target=/workspaces/${localWorkspaceFolderBasename}/.git"
+  ]
 }
 ```
 
 **Mount hierarchy:**
 ```text
 /workspaces/StateAtoms/          (bind mount from host)
+├── .git/                         (empty tmpfs, discarded when the container stops)
 ├── src/                          (host files)
 ├── .devcontainer/                (host files)
 ├── node_modules/                 (host files, npm managed in container)

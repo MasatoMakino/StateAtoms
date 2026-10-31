@@ -3,6 +3,9 @@
   "image": "node:22-bookworm-slim",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "mounts": [
+    "type=tmpfs,target=/workspaces/${localWorkspaceFolderBasename}/.git"
+  ],
   "remoteUser": "node",
   "runArgs": [
     "--cap-drop=ALL",
