@@ -1,4 +1,9 @@
 name: Publish to NPM
+# Trigger: publish a GitHub Release. The build job verifies and packs the
+# release, and the publish job stages it on npm. A maintainer compares the
+# shasum in the publish job log with the staged packages page of the npm
+# account, then approves it there or with `npm stage approve <stage-id>`,
+# with 2FA.
 on:
   release:
     types: [published]
@@ -61,10 +66,10 @@ jobs:
           retention-days: 1
 
   # Only this job can mint an OIDC token, and it runs no dependency code.
+  # It only stages the package: a maintainer approves it on npm with 2FA.
   publish:
     needs: build
     runs-on: ubuntu-22.04
-    environment: npm-publish
     permissions:
       id-token: write
     steps:
@@ -77,5 +82,5 @@ jobs:
         with:
           node-version: "26"
           registry-url: "https://registry.npmjs.org"
-      - name: Publish package on NPM 📦
-        run: npm publish ./*.tgz --access public
+      - name: Stage package on npm
+        run: npm stage publish ./*.tgz --provenance --access public
