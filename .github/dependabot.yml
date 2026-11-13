@@ -19,3 +19,10 @@ updates:
     cooldown:
       default-days: 7
       semver-major-days: 30
+
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

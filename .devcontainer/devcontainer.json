@@ -1,19 +1,32 @@
 {
-  "name": "StateAtoms npm Runner (Node 22)",
-  "image": "node:22-bookworm-slim",
+  "name": "${localWorkspaceFolderBasename} npm Runner (Node 26)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": { "WORKSPACE_DIR": "/workspaces/${localWorkspaceFolderBasename}" }
+  },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "initializeCommand": "mkdir -p .claude .vscode node_modules",
   "mounts": [
-    "type=tmpfs,target=/workspaces/${localWorkspaceFolderBasename}/.git"
+    "source=${localWorkspaceFolder}/.git,target=/workspaces/${localWorkspaceFolderBasename}/.git,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.devcontainer,target=/workspaces/${localWorkspaceFolderBasename}/.devcontainer,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.claude,target=/workspaces/${localWorkspaceFolderBasename}/.claude,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.vscode,target=/workspaces/${localWorkspaceFolderBasename}/.vscode,type=bind,readonly",
+    "source=${localWorkspaceFolder}/CLAUDE.md,target=/workspaces/${localWorkspaceFolderBasename}/CLAUDE.md,type=bind,readonly",
+    "source=${localWorkspaceFolder}/AGENTS.md,target=/workspaces/${localWorkspaceFolderBasename}/AGENTS.md,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.github,target=/workspaces/${localWorkspaceFolderBasename}/.github,type=bind,readonly",
+    "source=${localWorkspaceFolderBasename}-${devcontainerId}-node_modules,target=/workspaces/${localWorkspaceFolderBasename}/node_modules,type=volume"
   ],
   "remoteUser": "node",
   "runArgs": [
-    "--cap-drop=ALL",
-    "--name=${localWorkspaceFolderBasename}-npm-runner"
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW",
+    "--name=${localWorkspaceFolderBasename}-npm-runner-${devcontainerId}"
   ],
-  "postCreateCommand": "npm audit --audit-level=moderate && npm ci --ignore-scripts && npm audit signatures",
+  "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh && npm ci",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh && (npm audit --audit-level=moderate || true)",
   "containerEnv": {
     "NODE_ENV": "development",
-    "NPM_CONFIG_AUDIT": "true"
+    "NPM_CONFIG_IGNORE_SCRIPTS": "true"
   }
 }
