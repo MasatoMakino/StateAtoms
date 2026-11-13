@@ -24,7 +24,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm test",
+      "command": "devcontainer exec --workspace-folder . pnpm test",
       "group": "test",
       "problemMatcher": [],
       "label": "Dev Container: test",
@@ -37,7 +37,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm run build",
+      "command": "devcontainer exec --workspace-folder . pnpm run build",
       "group": "build",
       "problemMatcher": [],
       "label": "Dev Container: build",
@@ -50,7 +50,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm run coverage",
+      "command": "devcontainer exec --workspace-folder . pnpm run coverage",
       "group": "test",
       "problemMatcher": [],
       "label": "Dev Container: coverage",
@@ -63,7 +63,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm run pre-commit",
+      "command": "devcontainer exec --workspace-folder . pnpm run pre-commit",
       "group": "build",
       "problemMatcher": [],
       "label": "Dev Container: pre-commit",
@@ -76,7 +76,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm run pre-push",
+      "command": "devcontainer exec --workspace-folder . pnpm run pre-push",
       "group": "test",
       "problemMatcher": [],
       "label": "Dev Container: pre-push",
@@ -89,7 +89,7 @@
     },
     {
       "type": "shell",
-      "command": "devcontainer exec --workspace-folder . npm version ${input:versionType} --no-git-tag-version --ignore-scripts",
+      "command": "devcontainer exec --workspace-folder . pnpm version ${input:versionType} --no-git-tag-version",
       "group": "build",
       "problemMatcher": [],
       "label": "Dev Container: version (prompt)",
@@ -98,7 +98,7 @@
         "panel": "new",
         "showReuseMessage": false
       },
-      "detail": "Update version in package.json and package-lock.json without Git commit/tag inside Dev Container (with user prompt)"
+      "detail": "Update version in package.json without Git commit/tag inside Dev Container (with user prompt)"
     }
   ]
 }

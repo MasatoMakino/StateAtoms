@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { Atom, AtomContainer, ObjectAtom } from "../src/index.js";
-import { SimpleAtomContainer } from "./AtomContainer.spec.js";
+import { SimpleAtomContainer } from "./SimpleAtomContainer.js";
 
-export class MultipleAtomContainer extends AtomContainer {
+class MultipleAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(3);
   readonly atom2 = new Atom(4);
   readonly atomContainer = new SimpleAtomContainer();

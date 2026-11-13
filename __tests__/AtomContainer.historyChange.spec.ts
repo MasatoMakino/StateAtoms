@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AtomContainer } from "../src/index.js";
-import { SimpleAtomContainer } from "./AtomContainer.spec.js";
+import { SimpleAtomContainer } from "./SimpleAtomContainer.js";
 
 /**
  * Test helper with a child container that keeps its own history.

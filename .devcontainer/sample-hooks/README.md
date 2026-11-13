@@ -1,9 +1,9 @@
 # Git hooks
 
-Git runs on the host, and npm runs in the DevContainer. These hooks run the checks of `package.json` in the container of the working tree:
+Git runs on the host, and pnpm runs in the DevContainer. These hooks run the checks of `package.json` in the container of the working tree:
 
-- `pre-commit` runs `npm run pre-commit` with the staged files, then stages the formatted files again
-- `pre-push` runs `npm run pre-push` (type check, tests, and `biome ci`)
+- `pre-commit` runs `pnpm run pre-commit` with the staged files, then stages the formatted files again
+- `pre-push` runs `pnpm run pre-push` (type check, tests, and `biome ci`)
 
 Each hook finds the container by its `devcontainer.local_folder` label, and starts it when it is not running. Each worktree has its own container. For more information, see [Worktrees](../DESIGN.md#worktrees).
 

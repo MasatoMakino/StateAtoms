@@ -451,21 +451,21 @@ class CustomContainer extends AtomContainer<
 ### Building
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ### Testing
 
 ```bash
-npm test          # Run all tests
-npm run coverage  # Run tests with coverage
+pnpm test          # Run all tests
+pnpm run coverage  # Run tests with coverage
 ```
 
 ### Code Quality
 
 ```bash
-npx biome check   # Lint and format check
-npx biome format  # Format code
+pnpm exec biome check   # Lint and format check
+pnpm exec biome format  # Format code
 ```
 
 ## License

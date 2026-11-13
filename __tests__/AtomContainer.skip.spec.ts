@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Atom, AtomContainer } from "../src/index.js";
-import { SimpleAtomContainer } from "./AtomContainer.spec.js";
+import { SimpleAtomContainer } from "./SimpleAtomContainer.js";
 
-export class SkipAtomContainer extends AtomContainer {
+class SkipAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2, { isSkipSerialization: true });
   readonly atomContainer = new SimpleAtomContainer({
@@ -14,7 +14,7 @@ export class SkipAtomContainer extends AtomContainer {
   }
 }
 
-export class NewSkipAtomContainer extends AtomContainer {
+class NewSkipAtomContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atom2 = new Atom(2, { skipSerialization: true });
   readonly atomContainer = new SimpleAtomContainer({
@@ -26,7 +26,7 @@ export class NewSkipAtomContainer extends AtomContainer {
   }
 }
 
-export class CompatibilityTestContainer extends AtomContainer {
+class CompatibilityTestContainer extends AtomContainer {
   readonly atom1 = new Atom(1);
   readonly atomOld = new Atom(2, { isSkipSerialization: true });
   readonly atomNew = new Atom(3, { skipSerialization: true });

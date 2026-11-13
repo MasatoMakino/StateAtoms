@@ -1,18 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  Atom,
-  AtomContainer,
-  type AtomContainerOptions,
-} from "../src/index.js";
-
-export class SimpleAtomContainer extends AtomContainer {
-  readonly atom1 = new Atom(1);
-  readonly atom2 = new Atom(2);
-  constructor(options?: AtomContainerOptions) {
-    super(options);
-    this.connectMemberAtoms();
-  }
-}
+import { Atom, AtomContainer } from "../src/index.js";
+import { SimpleAtomContainer } from "./SimpleAtomContainer.js";
 
 describe("AtomContainer - Hierarchical state management with event propagation and serialization", () => {
   it("should initialize properly without any atoms", () => {
@@ -264,7 +252,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
   });
 
   describe("Event propagation validation", () => {
-    it("should maintain event argument integrity through propagation", () => {
+    it("should emit each parent event before the matching child event", () => {
       class NestedContainer extends AtomContainer {
         child = new SimpleAtomContainer();
 
