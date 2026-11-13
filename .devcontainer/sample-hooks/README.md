@@ -5,6 +5,7 @@ This directory contains sample Git hook files for this project.
 ## Why Manual Git Hooks?
 
 In the DevContainer isolation architecture:
+
 - **Git runs on the host OS** - All git operations (commit, push) execute on your machine
 - **npm runs in the container** - All npm scripts execute in the isolated container
 - **Husky is incompatible** - Husky requires npm to control Git hooks, which isn't possible across this boundary
@@ -123,6 +124,7 @@ CONTAINER_NAME="$(basename "$REPO_ROOT")-npm-runner"
 ```
 
 This ensures hooks work correctly:
+
 - In git worktree environments (each worktree gets independent container)
 - From any subdirectory within the repository
 - When repository is renamed or moved
@@ -130,12 +132,14 @@ This ensures hooks work correctly:
 ### File Path Argument Passing
 
 The pre-commit hook passes file paths explicitly to the container:
+
 1. **Host determines staged files**: `STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)`
 2. **Paths are repo-root-relative**: No path transformation needed
 3. **Pass to container**: `npm run pre-commit -- $STAGED_FILES`
 4. **Biome receives**: `biome format --write --no-errors-on-unmatched --files-ignore-unknown=true file1.ts file2.ts ...`
 
 **Benefits:**
+
 - Git not required in DevContainer (reduces image by ~80MB)
 - Single source of truth (host Git only)
 - Explicit file list (more transparent)
@@ -143,6 +147,7 @@ The pre-commit hook passes file paths explicitly to the container:
 ### Re-staging Logic (pre-commit)
 
 The pre-commit hook uses efficient re-staging:
+
 1. **Get staged files BEFORE npm run** (enables early return if no files staged)
 2. **Run formatter** in container with explicit file paths
 3. **Re-stage each file** with proper handling:

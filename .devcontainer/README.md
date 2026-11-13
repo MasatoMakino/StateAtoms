@@ -25,6 +25,7 @@ VS Code tasks are configured to use devcontainer CLI. See `.vscode/tasks.json` f
 This project has migrated from VS Code Dev Containers extension to devcontainer CLI for better credential isolation and editor independence.
 
 **Key Changes:**
+
 - Removed VS Code-specific settings from `devcontainer.json` (extensions, editor settings)
 - All tasks use `devcontainer exec` instead of `docker exec`
 - Credentials are isolated by default (no automatic forwarding)
@@ -36,6 +37,7 @@ This project has migrated from VS Code Dev Containers extension to devcontainer 
 ### Why Git is Not in the Container
 
 The container is designed exclusively for npm execution isolation:
+
 - **Host OS**: Handles all Git operations with your credentials and GPG/SSH keys
 - **Container**: Only runs npm commands (build, test, format)
 - **Benefits**: Simpler container (~80MB smaller), no credential management needed
@@ -58,6 +60,7 @@ devcontainer exec --workspace-folder . git --version
 ### Base Image
 
 Uses official Node.js Docker image:
+
 - **Image**: `node:22-bookworm-slim`
 - Minimal Debian-based image with Node.js 22
 - No additional tools (Git, build tools) for smaller footprint
@@ -65,12 +68,14 @@ Uses official Node.js Docker image:
 ### Security Features
 
 **Container Hardening:**
+
 - `--cap-drop=ALL`: Removes all Linux capabilities for defense in depth
 - `remoteUser: node`: Non-root user execution (UID:1000, GID:1000)
 - Isolated credentials: No automatic credential forwarding from host
 - Hidden `.git`: An empty tmpfs covers the host `.git`. Code that runs in the container cannot read the repository or write Git hooks and config that the host Git runs
 
 **npm Execution Isolation:**
+
 - All npm commands execute exclusively in the container
 - Host OS npm is never used, protecting against malicious package scripts
 - Automatic `npm audit --audit-level=moderate` on container start
@@ -79,12 +84,14 @@ Uses official Node.js Docker image:
 ### node_modules Access Model
 
 **Current Approach:**
+
 - node_modules is stored on the host filesystem (no Docker volume)
 - Host OS can read node_modules for IDE type definition support
 - Enables IntelliSense, auto-completion, and type checking in host IDEs
 - npm installation and script execution remain isolated in the container
 
 **Security Trade-off:**
+
 - **Previous**: Complete isolation via Docker named volumes (higher security, no IDE support)
 - **Current**: npm execution isolated, node_modules accessible to host (balanced approach)
 - Primary security boundary is the containerized npm execution environment
@@ -101,6 +108,7 @@ Uses official Node.js Docker image:
 ```
 
 **Mount hierarchy:**
+
 ```text
 /workspaces/StateAtoms/          (bind mount from host)
 ├── .git/                         (empty tmpfs, discarded when the container stops)
