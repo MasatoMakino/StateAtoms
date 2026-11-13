@@ -17,6 +17,7 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "build": "tsc",
+    "lint": "biome check .",
     "pre-commit": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
     "pre-push": "pnpm run build --noEmit && vitest --run && biome ci ."
   },
