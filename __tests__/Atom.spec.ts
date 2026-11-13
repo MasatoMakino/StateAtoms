@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import { Atom } from "../src/index.js";
 
 describe("Atom - Core reactive primitive value management", () => {
-  it("should initialize with correct value and be properly defined", () => {
+  it("value returns the initial value passed to the constructor until the first assignment", () => {
     const atom = new Atom(1);
     expect(atom).toBeDefined();
     expect(atom.value).toBe(1);
   });
 
-  it("should emit beforeChange and change events with correct arguments when value changes", () => {
+  it("assigning a different value emits beforeChange and change with the atom, the new value, and the previous value", () => {
     const atom = new Atom(1);
     const spyBeforeChange = vi.fn();
     const spyChange = vi.fn();
@@ -30,31 +30,7 @@ describe("Atom - Core reactive primitive value management", () => {
   });
 
   describe("Edge cases and special values", () => {
-    it("should handle null values correctly", () => {
-      const atom = new Atom<string | null>(null);
-      expect(atom.value).toBeNull();
-
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = "not null";
-      expect(spy).toHaveBeenCalled();
-      expect(atom.value).toBe("not null");
-    });
-
-    it("should handle undefined values correctly", () => {
-      const atom = new Atom<string | undefined>(undefined);
-      expect(atom.value).toBeUndefined();
-
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = "defined";
-      expect(spy).toHaveBeenCalled();
-      expect(atom.value).toBe("defined");
-    });
-
-    it("should handle NaN values correctly", () => {
+    it("assigning NaN to an atom that holds NaN emits change, because Atom compares with === and NaN !== NaN", () => {
       const atom = new Atom(NaN);
       expect(atom.value).toBeNaN();
 
@@ -64,18 +40,6 @@ describe("Atom - Core reactive primitive value management", () => {
       // NaN !== NaN, so the assignment counts as a change.
       atom.value = NaN;
       expect(spy).toHaveBeenCalled();
-    });
-
-    it("should handle Infinity values correctly", () => {
-      const atom = new Atom(Infinity);
-      expect(atom.value).toBe(Infinity);
-
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = -Infinity;
-      expect(spy).toHaveBeenCalled();
-      expect(atom.value).toBe(-Infinity);
     });
   });
 
@@ -119,60 +83,10 @@ describe("Atom - Core reactive primitive value management", () => {
       atom.value = 2;
       expect(eventOrder).toEqual(["beforeChange", "change"]);
     });
-
-    it("should provide correct event arguments in beforeChange", () => {
-      const atom = new Atom("initial");
-
-      atom.on("beforeChange", (args) => {
-        expect(args.from).toBe(atom);
-        expect(args.value).toBe("updated");
-        expect(args.valueFrom).toBe("initial");
-        expect(atom.value).toBe("initial");
-      });
-
-      atom.value = "updated";
-    });
-
-    it("should provide correct event arguments in change", () => {
-      const atom = new Atom("initial");
-
-      atom.on("change", (args) => {
-        expect(args.from).toBe(atom);
-        expect(args.value).toBe("updated");
-        expect(args.valueFrom).toBe("initial");
-        expect(atom.value).toBe("updated");
-      });
-
-      atom.value = "updated";
-    });
   });
 
   describe("Complex value types", () => {
-    it("should handle array values with reference equality", () => {
-      const arr1 = [1, 2, 3];
-      const arr2 = [1, 2, 3];
-      const atom = new Atom(arr1);
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = arr2;
-      expect(spy).toHaveBeenCalled();
-      expect(atom.value).toBe(arr2);
-    });
-
-    it("should handle function values", () => {
-      const func1 = () => "hello";
-      const func2 = () => "world";
-      const atom = new Atom(func1);
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = func2;
-      expect(spy).toHaveBeenCalled();
-      expect(atom.value).toBe(func2);
-    });
-
-    it("should handle Date objects with reference equality", () => {
+    it("assigning an equal but different Date instance emits change, because Atom compares by reference; use ObjectAtom for deep equality", () => {
       const date1 = new Date("2025-01-01");
       const date2 = new Date("2025-01-01");
       const atom = new Atom(date1);

@@ -13,11 +13,6 @@ class MultipleAtomContainer extends AtomContainer {
 }
 
 describe("MultipleAtomContainer - Nested container hierarchies and event propagation", () => {
-  it("should initialize nested container structure properly", () => {
-    const atomContainer = new MultipleAtomContainer();
-    expect(atomContainer).toBeTruthy();
-  });
-
   it("should bubble events from deeply nested atoms through container hierarchy", () => {
     const atomContainer = new MultipleAtomContainer();
     const spyBeforeChange = vi.fn();

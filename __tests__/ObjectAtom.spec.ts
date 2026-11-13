@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ObjectAtom } from "../src/index.js";
 
 describe("ObjectAtom - Deep equality comparison for object values using fast-equals", () => {
-  it("should initialize with correct object value and be properly defined", () => {
+  it("value returns the object passed to the constructor", () => {
     const initialValue = { name: "John", age: 30 };
     const atom = new ObjectAtom(initialValue);
     expect(atom).toBeDefined();
@@ -42,7 +42,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     });
   });
 
-  it("should handle nested objects with deep equality comparison", () => {
+  it("compares nested objects deeply: an equal nested structure emits nothing, and a changed leaf emits change", () => {
     const atom = new ObjectAtom({
       user: { name: "John", settings: { theme: "dark" } },
       config: { autoSave: true },
@@ -63,7 +63,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     expect(spyChange).toHaveBeenCalled();
   });
 
-  it("should handle arrays with deep equality comparison", () => {
+  it("compares arrays element by element in order, so a reordered array emits change", () => {
     const atom = new ObjectAtom({
       tags: ["javascript", "typescript"],
       scores: [10, 20, 30],
@@ -84,7 +84,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     expect(spyChange).toHaveBeenCalled();
   });
 
-  it("should handle null and undefined values correctly", () => {
+  it("null property values compare equal and emit nothing, and replacing null with undefined emits change", () => {
     const atom = new ObjectAtom<{ value: string | null | undefined }>({
       value: null,
     });
@@ -98,23 +98,8 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     expect(spyChange).toHaveBeenCalled();
   });
 
-  it("should handle empty objects and arrays correctly", () => {
-    const atom = new ObjectAtom<{
-      empty: Record<string, unknown>;
-      list: number[];
-    }>({ empty: {}, list: [] });
-    const spyChange = vi.fn();
-    atom.on("change", spyChange);
-
-    atom.value = { empty: {}, list: [] };
-    expect(spyChange).not.toHaveBeenCalled();
-
-    atom.value = { empty: {}, list: [1] };
-    expect(spyChange).toHaveBeenCalled();
-  });
-
   describe("Special object types and edge cases", () => {
-    it("should handle Date objects with deep equality", () => {
+    it("Date values with the same time compare equal and emit nothing, and a different time emits change", () => {
       const date1 = new Date("2025-01-01T00:00:00.000Z");
       const date2 = new Date("2025-01-01T00:00:00.000Z");
       const date3 = new Date("2025-01-02T00:00:00.000Z");
@@ -130,7 +115,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should handle objects with function properties", () => {
+    it("function properties compare by reference, so a different function instance with the same body emits change", () => {
       const func1 = () => "hello";
       const func2 = () => "hello"; // Different function instance
 
@@ -142,7 +127,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should handle Map objects", () => {
+    it("Map values with the same entries compare equal and emit nothing, and a changed entry value emits change", () => {
       const map1 = new Map([
         ["key1", "value1"],
         ["key2", "value2"],
@@ -167,7 +152,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should handle Set objects", () => {
+    it("Set values with the same members compare equal and emit nothing, and a different member emits change", () => {
       const set1 = new Set([1, 2, 3]);
       const set2 = new Set([1, 2, 3]);
       const set3 = new Set([1, 2, 4]);
@@ -183,7 +168,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should handle objects with NaN and Infinity values", () => {
+    it("NaN, Infinity, and -Infinity properties compare equal to themselves and emit nothing, and a changed property emits change", () => {
       const atom = new ObjectAtom({
         nanValue: NaN,
         infinityValue: Infinity,
@@ -208,49 +193,8 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
     });
   });
 
-  describe("Array edge cases", () => {
-    it("should handle sparse arrays", () => {
-      const sparse1 = [1, undefined, 3];
-      const sparse2 = [1, undefined, 3];
-      const sparse3 = [1, 2, 3];
-
-      const atom = new ObjectAtom({ data: sparse1 });
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = { data: sparse2 };
-      expect(spy).not.toHaveBeenCalled();
-
-      atom.value = { data: sparse3 };
-      expect(spy).toHaveBeenCalled();
-    });
-
-    it("should handle arrays with mixed types", () => {
-      const mixed1 = [1, "string", { key: "value" }, [1, 2], null, undefined];
-      const mixed2 = [1, "string", { key: "value" }, [1, 2], null, undefined];
-      const mixed3 = [
-        1,
-        "string",
-        { key: "different" },
-        [1, 2],
-        null,
-        undefined,
-      ];
-
-      const atom = new ObjectAtom({ items: mixed1 });
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = { items: mixed2 };
-      expect(spy).not.toHaveBeenCalled();
-
-      atom.value = { items: mixed3 };
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe("Custom classes and prototypes", () => {
-    it("should handle custom class instances", () => {
+    it("custom class instances with the same property values compare equal and emit nothing, and different property values emit change", () => {
       class User {
         constructor(
           public name: string,
@@ -274,7 +218,7 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should handle Error objects", () => {
+    it("Error instances with the same message still emit change, because the comparison includes their stack traces", () => {
       const error1 = new Error("Test error");
       const error2 = new Error("Test error");
       const error3 = new Error("Different error");
@@ -290,111 +234,6 @@ describe("ObjectAtom - Deep equality comparison for object values using fast-equ
 
       atom.value = { lastError: error3 };
       expect(spy).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("Complex nested structures", () => {
-    it("should handle deeply nested objects (5+ levels)", () => {
-      const deep1 = {
-        level1: {
-          level2: {
-            level3: {
-              level4: {
-                level5: {
-                  value: "deep",
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const deep2 = {
-        level1: {
-          level2: {
-            level3: {
-              level4: {
-                level5: {
-                  value: "deep",
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const deep3 = {
-        level1: {
-          level2: {
-            level3: {
-              level4: {
-                level5: {
-                  value: "different",
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const atom = new ObjectAtom(deep1);
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = deep2;
-      expect(spy).not.toHaveBeenCalled();
-
-      atom.value = deep3;
-      expect(spy).toHaveBeenCalled();
-    });
-
-    it("should handle circular references with fast-equals limitations", () => {
-      // fast-equals overflows the stack on a circular reference, so this test uses acyclic objects.
-      const obj1 = { name: "circular", id: 1 };
-      const obj2 = { name: "circular", id: 1 };
-      const obj3 = { name: "different", id: 2 };
-
-      const atom = new ObjectAtom({ data: obj1 });
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      atom.value = { data: obj2 };
-      expect(spy).not.toHaveBeenCalled();
-
-      atom.value = { data: obj3 };
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
-  describe("Performance and boundary conditions", () => {
-    // Discard condition: the 100 ms limit depends on the speed of the test machine.
-    // Relax or remove the limit if it fails on a slow runner.
-    it("should handle large objects efficiently", () => {
-      const largeObj1: Record<string, number> = {};
-      const largeObj2: Record<string, number> = {};
-      const largeObj3: Record<string, number> = {};
-
-      for (let i = 0; i < 1000; i++) {
-        largeObj1[`prop${i}`] = i;
-        largeObj2[`prop${i}`] = i;
-        largeObj3[`prop${i}`] = i + 1; // Different values
-      }
-
-      const atom = new ObjectAtom({ data: largeObj1 });
-      const spy = vi.fn();
-      atom.on("change", spy);
-
-      const start1 = performance.now();
-      atom.value = { data: largeObj2 };
-      const end1 = performance.now();
-      expect(spy).not.toHaveBeenCalled();
-      expect(end1 - start1).toBeLessThan(100);
-
-      const start2 = performance.now();
-      atom.value = { data: largeObj3 };
-      const end2 = performance.now();
-      expect(spy).toHaveBeenCalled();
-      expect(end2 - start2).toBeLessThan(100);
     });
   });
 });

@@ -406,6 +406,8 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 - `addHistory`: Emitted when history entry is added. Propagated from child atoms/containers
 - `historyChange`: Emitted after the history index or length changes. Not propagated to parent containers
 
+A container re-emits an event of a member as soon as the member emits it. The listeners of a parent therefore run before the listeners that you add to its child after the parent connects the child.
+
 **Event Handling Examples:**
 
 ```typescript
