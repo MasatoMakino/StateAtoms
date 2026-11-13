@@ -150,6 +150,9 @@ local-notes/
 ehthumbs.db
 Thumbs.db
 
+# Git worktrees of Claude Code. Each has its own DevContainer.
+.claude/worktrees/
+
 # AI agent harness files
 **/.claude/**/*.local.*
 CLAUDE.local.md
