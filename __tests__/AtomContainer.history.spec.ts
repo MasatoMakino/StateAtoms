@@ -259,6 +259,7 @@ describe("AtomContainer.history - Undo/redo state management and history clearin
       }
     });
     container.undo();
+    expect(container.atom2.value).toBe(99);
     container.addHistory();
     container.undo();
     expect(container.atom2.value).toBe(2);

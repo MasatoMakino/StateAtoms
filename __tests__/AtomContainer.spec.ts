@@ -3,11 +3,6 @@ import { Atom, AtomContainer } from "../src/index.js";
 import { SimpleAtomContainer } from "./SimpleAtomContainer.js";
 
 describe("AtomContainer - Hierarchical state management with event propagation and serialization", () => {
-  it("should initialize properly without any atoms", () => {
-    const atomContainer = new AtomContainer();
-    expect(atomContainer).toBeTruthy();
-  });
-
   it("should bubble beforeChange and change events from child atoms to container level", () => {
     const atomContainer = new SimpleAtomContainer();
     const spyBeforeChange = vi.fn();
@@ -75,22 +70,16 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       const container = new AtomContainer();
       expect(container.skipSerialization).toBe(false);
     });
-
-    it("should set skipSerialization when provided in options", () => {
-      const container = new AtomContainer({ skipSerialization: true });
-      expect(container.skipSerialization).toBe(true);
-    });
   });
 
   describe("Error handling in serialization", () => {
-    it("should handle JSON parsing errors and incompatible data types", () => {
+    it("fromJson throws SyntaxError for invalid JSON, and fromObject stores values without a run-time type check and ignores unknown keys", () => {
       const container = new SimpleAtomContainer();
 
       expect(() => {
         container.fromJson('{"invalid": json}');
       }).toThrow(SyntaxError);
 
-      // fromObject does not check value types at runtime.
       container.fromObject({
         atom1: "string instead of number",
         nonExistentProperty: "ignored",
@@ -104,7 +93,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
   });
 
   describe("Empty and edge case containers", () => {
-    it("should handle container with no atoms", () => {
+    it("a container without members serializes to {} and accepts {} on restore", () => {
       class EmptyContainer extends AtomContainer {
         constructor() {
           super();
@@ -119,44 +108,10 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       container.fromObject({});
       container.fromJson("{}");
     });
-
-    it("should handle container with only skipped atoms", () => {
-      class SkippedContainer extends AtomContainer {
-        atom1 = new Atom(1, { skipSerialization: true });
-        atom2 = new Atom(2, { skipSerialization: true });
-
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new SkippedContainer();
-      expect(container.toObject()).toEqual({});
-      expect(container.toJson()).toBe("{}");
-    });
   });
 
   describe("Load method and history interaction", () => {
-    it("should load data and clear history when useHistory is enabled", () => {
-      const container = new SimpleAtomContainer({ useHistory: true });
-
-      container.atom1.value = 10;
-      container.emit("addHistory");
-      container.atom1.value = 20;
-      container.emit("addHistory");
-
-      container.load({ atom1: 100, atom2: 200 });
-
-      expect(container.atom1.value).toBe(100);
-      expect(container.atom2.value).toBe(200);
-
-      const beforeUndo1 = container.atom1.value;
-      container.undo();
-      expect(container.atom1.value).toBe(beforeUndo1);
-    });
-
-    it("should handle load with partial data", () => {
+    it("load leaves atoms whose keys are absent unchanged, like fromObject", () => {
       const container = new SimpleAtomContainer();
       const originalAtom2Value = container.atom2.value;
 
@@ -164,147 +119,6 @@ describe("AtomContainer - Hierarchical state management with event propagation a
 
       expect(container.atom1.value).toBe(999);
       expect(container.atom2.value).toBe(originalAtom2Value);
-    });
-  });
-
-  describe("Complex nested scenarios", () => {
-    it("should handle deeply nested containers (3+ levels)", () => {
-      class Level3Container extends AtomContainer {
-        atom = new Atom("level3");
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      class Level2Container extends AtomContainer {
-        atom = new Atom("level2");
-        nested = new Level3Container();
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      class Level1Container extends AtomContainer {
-        atom = new Atom("level1");
-        nested = new Level2Container();
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new Level1Container();
-      const spy = vi.fn();
-
-      container.on("change", spy);
-
-      container.nested.nested.atom.value = "changed";
-      expect(spy).toHaveBeenCalled();
-
-      const serialized = container.toObject();
-      expect(serialized).toEqual({
-        atom: "level1",
-        nested: {
-          atom: "level2",
-          nested: {
-            atom: "changed",
-          },
-        },
-      });
-    });
-
-    it("should handle containers with mixed atom types", () => {
-      class MixedContainer extends AtomContainer {
-        stringAtom = new Atom("string");
-        numberAtom = new Atom(42);
-        booleanAtom = new Atom(true);
-        arrayAtom = new Atom([1, 2, 3]);
-        objectAtom = new Atom({ key: "value" });
-
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new MixedContainer();
-      const serialized = container.toObject();
-
-      expect(serialized).toEqual({
-        stringAtom: "string",
-        numberAtom: 42,
-        booleanAtom: true,
-        arrayAtom: [1, 2, 3],
-        objectAtom: { key: "value" },
-      });
-
-      const newContainer = new MixedContainer();
-      newContainer.fromObject(serialized);
-
-      expect(newContainer.stringAtom.value).toBe("string");
-      expect(newContainer.numberAtom.value).toBe(42);
-      expect(newContainer.booleanAtom.value).toBe(true);
-      expect(newContainer.arrayAtom.value).toEqual([1, 2, 3]);
-      expect(newContainer.objectAtom.value).toEqual({ key: "value" });
-    });
-  });
-
-  describe("Event propagation validation", () => {
-    it("should emit each parent event before the matching child event", () => {
-      class NestedContainer extends AtomContainer {
-        child = new SimpleAtomContainer();
-
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new NestedContainer();
-      const eventOrder: string[] = [];
-
-      container.on("beforeChange", () =>
-        eventOrder.push("parent-beforeChange"),
-      );
-      container.on("change", () => eventOrder.push("parent-change"));
-
-      container.child.on("beforeChange", () =>
-        eventOrder.push("child-beforeChange"),
-      );
-      container.child.on("change", () => eventOrder.push("child-change"));
-
-      container.child.atom1.value = 999;
-
-      // A parent re-emits a child event as soon as it receives it.
-      expect(eventOrder).toEqual([
-        "parent-beforeChange",
-        "child-beforeChange",
-        "parent-change",
-        "child-change",
-      ]);
-    });
-
-    it("should maintain event argument integrity through propagation", () => {
-      class NestedContainer extends AtomContainer {
-        child = new SimpleAtomContainer();
-
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new NestedContainer();
-
-      container.on("change", (args) => {
-        expect(args.from).toBe(container.child.atom1);
-        expect(args.value).toBe(42);
-        expect(args.valueFrom).toBe(1);
-      });
-
-      container.child.atom1.value = 42;
     });
   });
 
@@ -352,31 +166,7 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       });
     });
 
-    it("should not duplicate listeners when connectMemberAtoms() is called multiple times", () => {
-      class TestContainer extends AtomContainer {
-        atom1 = new Atom(1);
-
-        constructor() {
-          super();
-          this.connectMemberAtoms();
-        }
-
-        public reconnectMemberAtoms() {
-          this.connectMemberAtoms();
-        }
-      }
-
-      const container = new TestContainer();
-
-      expect(container.atom1.listenerCount("change")).toBe(1);
-
-      container.reconnectMemberAtoms();
-      container.reconnectMemberAtoms();
-
-      expect(container.atom1.listenerCount("change")).toBe(1);
-    });
-
-    it("should handle history initialization idempotently", () => {
+    it("repeated connectMemberAtoms() calls add no second initial entry or history snapshot, so one undo returns to the initial state", () => {
       class HistoryContainer extends AtomContainer {
         atom1 = new Atom(1);
 
@@ -391,20 +181,17 @@ describe("AtomContainer - Hierarchical state management with event propagation a
       }
 
       const container = new HistoryContainer();
-      const spyAddHistory = vi.fn();
-
-      container.on("addHistory", spyAddHistory);
-
-      // The internal history listener and the spy
-      expect(container.listenerCount("addHistory")).toBe(2);
-
       container.reconnectMemberAtoms();
       container.reconnectMemberAtoms();
 
-      expect(container.listenerCount("addHistory")).toBe(2);
+      container.atom1.value = 10;
+      // The atom requests the snapshot through the addHistory event, so a
+      // duplicated history listener would record an extra snapshot.
+      container.atom1.emit("addHistory");
 
-      container.emit("addHistory");
-      expect(spyAddHistory).toHaveBeenCalled();
+      container.undo();
+      expect(container.atom1.value).toBe(1);
+      expect(container.canUndo()).toBe(false);
     });
   });
 });

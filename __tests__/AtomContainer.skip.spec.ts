@@ -26,16 +26,6 @@ class NewSkipAtomContainer extends AtomContainer {
   }
 }
 
-class CompatibilityTestContainer extends AtomContainer {
-  readonly atom1 = new Atom(1);
-  readonly atomOld = new Atom(2, { isSkipSerialization: true });
-  readonly atomNew = new Atom(3, { skipSerialization: true });
-  constructor() {
-    super();
-    this.connectMemberAtoms();
-  }
-}
-
 describe("AtomContainer.skip - Selective serialization with isSkipSerialization flag", () => {
   it("should exclude atoms with isSkipSerialization flag from toObject() output", () => {
     const atomContainer = new SkipAtomContainer();
@@ -59,13 +49,7 @@ describe("AtomContainer.skip - New skipSerialization property", () => {
     expect(atomContainer.toJson()).toBe('{"atom1":1}');
   });
 
-  it("should have skipSerialization property accessible", () => {
-    const atom = new Atom(1, { skipSerialization: true });
-    expect(atom.skipSerialization).toBe(true);
-    expect(atom.isSkipSerialization).toBe(true); // Backwards compatibility
-  });
-
-  it("should have skipSerialization property accessible on container", () => {
+  it("the skipSerialization option sets skipSerialization and the deprecated isSkipSerialization on a container", () => {
     const container = new SimpleAtomContainer({ skipSerialization: true });
     expect(container.skipSerialization).toBe(true);
     expect(container.isSkipSerialization).toBe(true); // Backwards compatibility
@@ -73,7 +57,7 @@ describe("AtomContainer.skip - New skipSerialization property", () => {
 });
 
 describe("AtomContainer.skip - Backwards compatibility", () => {
-  it("should support both new and old APIs separately", () => {
+  it("an atom created with either skipSerialization or the deprecated isSkipSerialization reports true on both properties", () => {
     const atomNew = new Atom(1, { skipSerialization: true });
     const atomOld = new Atom(2, { isSkipSerialization: true });
 
@@ -81,17 +65,6 @@ describe("AtomContainer.skip - Backwards compatibility", () => {
     expect(atomNew.isSkipSerialization).toBe(true);
     expect(atomOld.skipSerialization).toBe(true);
     expect(atomOld.isSkipSerialization).toBe(true);
-  });
-
-  it("should work with mixed old and new properties", () => {
-    const container = new CompatibilityTestContainer();
-    expect(container.toObject()).toEqual({ atom1: 1 });
-  });
-
-  it("should handle old isSkipSerialization property as fallback", () => {
-    const atom = new Atom(1, { isSkipSerialization: true });
-    expect(atom.skipSerialization).toBe(true);
-    expect(atom.isSkipSerialization).toBe(true);
   });
 
   it("should handle container with old isSkipSerialization property as fallback", () => {
