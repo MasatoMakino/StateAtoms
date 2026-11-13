@@ -17,9 +17,10 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "build": "tsc",
-    "pre-commit": "npx biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
-    "pre-push": "npm run build -- --noEmit && npx vitest --run && npx biome ci ."
+    "pre-commit": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
+    "pre-push": "pnpm run build --noEmit && vitest --run && biome ci ."
   },
+  "packageManager": "pnpm@12.16.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MasatoMakino/StateAtoms.git"
@@ -35,7 +36,8 @@
     "@vitest/coverage-istanbul": "^5.0.2",
     "eventemitter3": "^5.0.1",
     "fast-equals": "^6.0.4",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "5.1.0"
   },
   "peerDependencies": {
     "eventemitter3": "^5.0.1",

@@ -4,7 +4,7 @@ StateAtoms is a TypeScript state management library. It divides application stat
 
 ## Development commands
 
-On the host, run npm commands only inside the development container, through `devcontainer exec --workspace-folder .`. The container has no Git, so run Git on the host. For the available tasks (build, test, coverage, pre-commit, pre-push, version), see `.vscode/tasks.json`. For the container design, see `.devcontainer/README.md`.
+On the host, run pnpm commands only inside the development container, through `devcontainer exec --workspace-folder .`. The container has no Git, so run Git on the host. For the available tasks (build, test, coverage, pre-commit, pre-push, version), see `.vscode/tasks.json`. For the container design, see `.devcontainer/README.md`.
 
 Each worktree has its own DevContainer. In a new worktree, run `devcontainer up --workspace-folder .` once before the other commands. For more information, see [Worktrees](.devcontainer/DESIGN.md#worktrees).
 
@@ -13,10 +13,10 @@ Each worktree has its own DevContainer. In a new worktree, run `devcontainer up 
 devcontainer up --workspace-folder .
 
 # Run the tests
-devcontainer exec --workspace-folder . npm test
+devcontainer exec --workspace-folder . pnpm test
 
 # Type-check, test, and run Biome as the pre-push hook does
-devcontainer exec --workspace-folder . npm run pre-push
+devcontainer exec --workspace-folder . pnpm run pre-push
 ```
 
 Biome formats and lints the code. To set up Git hooks that run these checks, see `.devcontainer/sample-hooks/README.md`.
