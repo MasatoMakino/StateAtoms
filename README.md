@@ -403,7 +403,7 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 
 - `change`: Propagated from child atoms/containers (typed based on DataType)
 - `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
-- `addHistory`: Emitted when history entry is added
+- `addHistory`: Emitted when history entry is added. Propagated from child atoms/containers
 - `historyChange`: Emitted after the history index or length changes. Not propagated to parent containers
 
 **Event Handling Examples:**

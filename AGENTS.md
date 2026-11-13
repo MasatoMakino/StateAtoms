@@ -1,6 +1,6 @@
 # AGENTS.md
 
-StateAtoms is a TypeScript state management library. It divides application state into small units called atoms.
+For the project overview and the usage, see [README.md](README.md).
 
 ## Development commands
 
@@ -20,15 +20,3 @@ devcontainer exec --workspace-folder . pnpm run pre-push
 ```
 
 Biome formats and lints the code. To set up Git hooks that run these checks, see `.devcontainer/sample-hooks/README.md`.
-
-## Architecture notes
-
-- An AtomContainer subclass calls `connectMemberAtoms()` in its constructor after it adds every member atom
-- `beforeChange`, `change`, and `addHistory` propagate upward through the container hierarchy. `historyChange` does not propagate
-- Serialization (`toObject`/`toJson`) skips atoms and containers with `skipSerialization: true`. Restore (`fromObject`/`fromJson`/`load`) and history include them
-- History requires `useHistory` (`true` or `{ maxHistory }`) in the container options
-- `dispose()` prevents memory leaks. A container owns its members, disposes them recursively, and removes all listeners. Disposing a shared member breaks its other subscribers by design
-
-## Local notes
-
-`local-notes/` holds local development memos. Git ignores this directory.
