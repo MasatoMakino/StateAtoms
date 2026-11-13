@@ -181,6 +181,7 @@ The type check lets you omit top-level keys, not keys inside a nested container.
 `fromObject()`, `fromJson()`, and `load()` do not check value types at run time. They assign each value to its atom as it is. For example, `fromJson('{"count":"x"}')` stores a string in `Atom<number>`.
 
 The parameter type checks only values that the compiler can see. Input from `JSON.parse()`, a server response, or `localStorage` gets no check. To restore a container from such input, follow these steps:
+
 1. Pass the input to a type guard function for the data type of the container.
 2. If the type guard rejects the input, throw an error.
 3. Pass the input that the type guard accepts to `fromObject()` or `load()`.
@@ -284,6 +285,7 @@ Manual `addHistory` events allow applications to control when meaningful snapsho
 ### Advanced Configuration
 
 `skipSerialization` marks temporary state that the server does not need, such as screen transition state. A container treats these members as follows:
+
 - `toObject()` and `toJson()` exclude them.
 - `fromObject()`, `fromJson()`, and `load()` restore them, so the server can supply initial values.
 - History records them, and `undo()` and `redo()` restore them.
@@ -317,6 +319,7 @@ Some values need none of serialization, restore, and history. Examples are crede
 `dispose()` prevents memory leaks. A container adds listeners to its member atoms, so a member atom references the container. If code outside the container still references a member atom, that atom keeps the container alive. When you discard state, call `dispose()` on the root container.
 
 A container owns its members. `dispose()` on a container does the following:
+
 - Calls `dispose()` on every member `Atom` and `AtomContainer` at every nesting level, including members marked with `skipSerialization`.
 - Removes every listener on each member and on the container itself, including listeners that your UI code added.
 
@@ -351,18 +354,21 @@ container.connectMemberAtoms();
 ### Atom\<T>
 
 Holds primitive values with change notifications.
+
 - `constructor(initialValue: T, options?)`: Create a new atom
 - `value: T`: Get/set the current value
 - `skipSerialization: boolean`: Whether a container excludes this atom from `toObject()` and `toJson()`. Restore and history include it (default: `false`)
 - `dispose()`: Remove every listener on this atom, including listeners of other containers that share it
 
 **Events:**
+
 - `change`: Emitted when value changes
 - `beforeChange`: Emitted before value changes
 
 ### ObjectAtom\<T>
 
 Extends Atom with deep equality comparison for objects.
+
 - Uses `fast-equals` for structural comparison
 - Same API as Atom but with smarter change detection
 
@@ -371,6 +377,7 @@ Extends Atom with deep equality comparison for objects.
 Manages multiple atoms with hierarchical event propagation and explicit event type handling.
 
 **Type Parameters:**
+
 - `DataType`: The structure of data when serialized (e.g., `{ count: number; name: string }`)
 - `EventTypes`: Event types (defaults to `AtomEvents<unknown>` for maximum flexibility)
 
@@ -378,6 +385,7 @@ Manages multiple atoms with hierarchical event propagation and explicit event ty
 EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event bubbling. For type safety, use explicit type specification in event handlers or type guards to handle different atom types appropriately.
 
 **Methods:**
+
 - `constructor(options?)`: Create container with optional history
 - `toObject()`: Serialize to plain object
 - `toJson()`: Serialize to JSON string
@@ -392,12 +400,14 @@ EventTypes defaults to `AtomEvents<unknown>` due to the dynamic nature of event 
 - `dispose()`: Dispose this container and all nested members to prevent memory leaks. For more information, see [Disposing State](#disposing-state).
 
 **Events:**
+
 - `change`: Propagated from child atoms/containers (typed based on DataType)
 - `beforeChange`: Propagated from child atoms/containers (typed based on DataType)
 - `addHistory`: Emitted when history entry is added
 - `historyChange`: Emitted after the history index or length changes. Not propagated to parent containers
 
 **Event Handling Examples:**
+
 ```typescript
 // Recommended: Explicit type specification in event handlers
 class MyContainer extends AtomContainer<{ count: number; active: boolean }> {

@@ -500,6 +500,7 @@ function createSelectBinding(atom: Atom<string>, select: HTMLSelectElement) {
 ### 5. Object Values
 
 An atom that holds an object or an array treats it as one value that changes as a whole. Pass values between the atom and the UI as primitives:
+
 - **Atom to UI**: Assign primitive fields of `atom.value` to UI properties.
 - **UI to atom**: Build a new object from UI properties and assign it to `atom.value` itself. Do not assign to fields of `atom.value`.
 
@@ -541,6 +542,7 @@ redoButton.addEventListener("click", () => container.redo());
 ### 7. Derived Values
 
 To show a value that depends on several atoms, keep the result outside atoms. A `change` listener calls a compute function and writes the result to UI state:
+
 - **Source atoms**: Hold the state that history records.
 - **Compute function**: Reads the current values of the source atoms and returns the derived value.
 - **Derived value**: Lives in UI state, such as a variable or the state of your UI framework. It is not an atom.
