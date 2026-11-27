@@ -177,7 +177,7 @@ importers:
         version: 5.0.4
       fast-equals:
         specifier: ^6.0.4
-        version: 6.2.2
+        version: 6.4.0
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -584,8 +584,8 @@ packages:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
 
-  fast-equals@6.2.2:
-    resolution: {integrity: sha512-n+XqoarWCgcar0O3om3DeNYx6xTuLWGTUF1bRZ9iuO00tsPepzP1L4V7rqtxxZ4PEya34UCESReimFvxmEVwIA==}
+  fast-equals@6.4.0:
+    resolution: {integrity: sha512-WueHOj7IYeH9WWwr5lZ0UaDUhG35cz7Dh2SkDMNjiinPy7Dc7CbKP+1aP5YPLjG+BQ7MA1LDxUk78exLMjDxig==}
     engines: {node: '>=6.0.0'}
 
   fdir@6.5.0:
@@ -1080,7 +1080,7 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  fast-equals@6.2.2: {}
+  fast-equals@6.4.0: {}
 
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
